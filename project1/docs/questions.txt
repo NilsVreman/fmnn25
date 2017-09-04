@@ -1,0 +1,5 @@
+1. What is plotted in figure on page 3?
+2. how do we find the control points?
+3. What is padding and why is it needed?
+4. How do we do all this in 2D?
+5. When was this due?
