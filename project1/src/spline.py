@@ -52,19 +52,34 @@ class spline:
 
         return d_i[p]
 
+    def get_points(self, steps):
+        """
+        Calculate the spline and put the results in a matrix
+
+        steps: Nbr of steps/points to evaluate the spline (resolution)
+        return: A vector of point tuples (x,y)
+        """
+
+        # Create a matrix to store all result points
+        results = np.zeros([steps + 1, len(d[0])])
+        # Evaluate for each step
+        for i in range(0, steps + 1):
+            results[i, :] = sp.value(i / steps)
+            print(results[i])
+
+        return results
 
 if __name__ == '__main__':
-    d = np.array([[0,0], [5,0], [8, 3], [5,5], [0,10]]).astype(float)   #Control points
-    sp = spline(d)
-    steps = 100                                                 #Nbr of steps to evaluate
-    results = np.zeros([steps+1, 2])                            #All results for each step
-
-    #Calculate the spline and put the results in a matrix
-    for i in range(0, steps+1):
-        results[i,:] = sp.value(i/steps)
-        print(results[i])
+    d = np.array([[5,2], [14, 2.1], [26,2], [27,1.5],
+                  [27,1.5], [24,1.5], [24,1.5], [27,1.5],
+                  [27,1.5], [26,1], [9,1], [9,1], [10,1],
+                  [10,0], [5,0], [5,0.7], [5,0.7], [5,0],
+                  [0,0], [0,1], [1.5,1.8], [5,2]]).astype(float)    #Control points
+    sp = spline(d)                                                  #Create spline
+    results = sp.get_points(steps=100)
 
     plt.plot(results[:,0], results[:,1])    #Plot the spline
     plt.plot(d[:, 0], d[:, 1], '*')         #Plot control points
     plt.plot(d[:,0], d[:,1])                #Plot control polygon
+    plt.axis([-2, 30, -0.7, 3.2])           #Custom axis
     plt.show()
