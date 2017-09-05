@@ -6,13 +6,15 @@ class spline:
     def __init__(self):
         pass
 
+    """
+    Calculate a value on the spline given the control points d and a position u (0-1)
+    
+    d:  Control points {(x_i, y_i)
+    u:  The point in which we want to evaluate the spline (0-1)
+    p:  Degree of the spline
+    """
     def value(self, d, u, p=3):
-        """
-        xi: grid points on u. Assume xi sorted and padded
-        d:  control points {(x_i, y_i)}_{i=0}^L
-        u:  the point in which we want to evaluate the spline
-        p:  degree of the spline
-        """
+
         #Return endpoints if u = 0 or 1
         if u == 0: return d[0]
         elif u == 1: return d[-1]
@@ -42,7 +44,7 @@ if __name__ == '__main__':
     steps = 100                                                 #Nbr of steps to evaluate
     results = np.zeros([steps+1, 2])                            #All results for each step
 
-    #Calculate the spline
+    #Calculate the spline and put the results in a matrix
     for i in range(0, steps+1):
         results[i,:] = sp.value(d, i/steps)
         print(results[i])
