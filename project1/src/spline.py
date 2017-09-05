@@ -59,14 +59,11 @@ class spline:
         steps: Nbr of steps/points to evaluate the spline (resolution)
         return: A vector of point tuples (x,y)
         """
-
         # Create a matrix to store all result points
         results = np.zeros([steps + 1, len(d[0])])
         # Evaluate for each step
         for i in range(0, steps + 1):
             results[i, :] = sp.value(i / steps)
-            print(results[i])
-
         return results
 
 if __name__ == '__main__':
@@ -80,6 +77,8 @@ if __name__ == '__main__':
     sp = spline(d)
     # Get "step" amount of points that form the spline and put them in a matrix
     results = sp.get_points(steps=100)
+    
+    print(results)
 
     plt.plot(results[:,0], results[:,1])    #Plot the spline
     plt.plot(d[:, 0], d[:, 1], '*')         #Plot control points
