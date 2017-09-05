@@ -54,7 +54,7 @@ class spline:
 
     def get_points(self, steps):
         """
-        Calculate the spline and put the results in a matrix
+        Calculate the points on the spline and put them in a matrix
 
         steps: Nbr of steps/points to evaluate the spline (resolution)
         return: A vector of point tuples (x,y)
@@ -70,12 +70,15 @@ class spline:
         return results
 
 if __name__ == '__main__':
+    # Control points
     d = np.array([[5,2], [14, 2.1], [26,2], [27,1.5],
                   [27,1.5], [24,1.5], [24,1.5], [27,1.5],
                   [27,1.5], [26,1], [9,1], [9,1], [10,1],
                   [10,0], [5,0], [5,0.7], [5,0.7], [5,0],
-                  [0,0], [0,1], [1.5,1.8], [5,2]]).astype(float)    #Control points
-    sp = spline(d)                                                  #Create spline
+                  [0,0], [0,1], [1.5,1.8], [5,2]]).astype(float)
+    # Create spline
+    sp = spline(d)
+    # Calculate the points that form the spline and put them in a matrix
     results = sp.get_points(steps=100)
 
     plt.plot(results[:,0], results[:,1])    #Plot the spline
