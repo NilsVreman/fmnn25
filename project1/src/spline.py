@@ -42,6 +42,7 @@ if __name__ == '__main__':
     steps = 100                                                 #Nbr of steps to evaluate
     results = np.zeros([steps+1, 2])                            #All results for each step
 
+    #Calculate the spline
     for i in range(0, steps+1):
         results[i,:] = sp.value(d, i/steps)
         print(results[i])
