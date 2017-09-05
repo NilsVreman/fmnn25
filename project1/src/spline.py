@@ -27,7 +27,7 @@ class spline:
         #Find the index of the knot interval where u is located.
         #Put surrounding p+1 control points that are influencing the final value in a vector
         I = np.searchsorted(xi, u) - 1
-        d_i = np.array([d[i+I-p] for i in range(0, p+1)])
+        d_i = np.array([d[i-1] for i in range(I-p+1, I+1+1)])
 
         #Evaluation
         for deg_lvl in range(0, p):
@@ -38,7 +38,6 @@ class spline:
         return d_i[p]
 
 if __name__ == '__main__':
-
     sp = spline()
     d = np.array([[0,0], [5,0], [5,5], [0,10]]).astype(float)   #Control points
     steps = 100                                                 #Nbr of steps to evaluate
