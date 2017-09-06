@@ -4,6 +4,12 @@ import numpy as np
 class spline:
 
     def __init__(self, d, p=3):
+        """
+        Creates a spline of degree p based on the points d=[[dx1,dy1], ..., [dxn, dyn]]
+
+        d: The control points
+        p: The spline degree
+        """
         self.__d = d
         self.__p = p
 
@@ -15,6 +21,8 @@ class spline:
 
     def __find_interval(self, u):
         """
+        Finds the interval in which u is located. Returns this index and the relevant control points
+
         u:  The point in which we want to evaluate the spline (0-1)
         return: A tuple: The interval index I, relevant control points d_i
         """
@@ -68,16 +76,20 @@ class spline:
 
     def plot(self, steps, de_boor=True, ctrl_pol=True):
         results = self.get_points(steps)
-        plt.plot(results[:,0], results[:,1])                #Plot the spline
+        # Plots the spline
+        plt.plot(results[:,0], results[:,1])
         if de_boor:
-            plt.plot(self.__d[:, 0], self.__d[:, 1], '*')   #Plot control points
+            # Plots control points
+            plt.plot(self.__d[:, 0], self.__d[:, 1], '*')
 
         if ctrl_pol:
-            plt.plot(self.__d[:,0], self.__d[:,1])          #Plot control polygon
+            # Plots control polygon
+            plt.plot(self.__d[:,0], self.__d[:,1])
 
+        # Sets axes to relate to the max and min control values.
         xmax, ymax = self.__d.max(axis=0)
         xmin, ymin = self.__d.min(axis=0)
-        plt.axis([xmin-2, xmax+2, ymin-1, ymax+1])          #Custom axis
+        plt.axis([xmin-2, xmax+2, ymin-1, ymax+1])
         plt.show()
 
 
