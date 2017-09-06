@@ -16,6 +16,7 @@ class spline:
         xi = np.zeros(len(d)-2+2*p)
         xi[-p:] = np.ones(p)
         xi[p:-p] = np.array([ i for i in np.linspace(0, 1, len(d)-2)])
+        self.__u_knots=xi[p:-p] # Knots without padding (Might not be needed)
         self.__xi = xi
 
     def __find_interval(self, u):
@@ -75,3 +76,52 @@ class spline:
 
     def get_ctrl_points(self):
         return self.__d
+
+    def get_knots(self):
+        return self.__u_knots
+
+
+    def getN_i_k(self, xi, i):
+        """
+        Sets the knots and index
+
+        u:  The point in which we want to evaluate the value of N
+        return: the function to evaluate basis function N in u
+        """
+        self.__base_knots = xi
+        self.__i = i
+        return self.N_base
+
+    def N_base(self,u):
+        xi = self.__base_knots # The knots to create base functions at
+        i = self.__i # The index of the base function
+        return self.__get_N_base(i, u, xi, self.__p)
+
+    def __get_N_base(self, i ,u, xi, k):
+        """
+        Calculate the N basis function by recursion
+
+        i:  index of basis function
+        u:  The point in which we want to evaluate the value of N
+        xi: The knots that we want to create a spline through
+        k:  Degree of the spline
+        return: value of basis function N in u
+        """
+        if k == 0:
+            if xi[i - 1] == xi[i]:
+                return 0
+            elif (u >= xi[i-1] and u < xi[i]):
+                return 1
+            else:
+                return 0
+        else:
+            return (self.__getMultVal(u - xi[i-1], xi[i + k - 1] - xi[i-1]) * self.__get_N_base(i, u, xi, k - 1) +
+                    self.__getMultVal(xi[i+k] - u, xi[i+k] - xi[i]) * self.__get_N_base(i+1, u, xi, k - 1))
+
+    """
+    Redefines divde by zero to 0/0 = 0
+    """
+    def __getMultVal(self,t,n):
+        if(n == 0.0):
+            return 0.0
+        return t/n

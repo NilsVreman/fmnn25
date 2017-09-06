@@ -1,6 +1,7 @@
 import unittest
 from spline import spline
 import numpy as np
+import matplotlib.pyplot as plt
 
 class TestSpline(unittest.TestCase):
     # EXAMPLES
@@ -12,20 +13,25 @@ class TestSpline(unittest.TestCase):
     #     self.assertFalse('Foo'.isupper())
 
     def test_splinecalc(self):
+        p = 3
+        d = np.array([[0,0], [5,0], [5,2], [8, 3], [5,8], [0,10]]).astype(float) #Control points
+        sp = spline(d, p=3)
 
-        d = np.array([[0,0], [5,0], [8, 3], [5,5], [0,10]]).astype(float) #Control points
-        sp = spline(d,3)
+    def test_plot_N(self):
+        d = np.array([[0,0], [3,1], [4,1], [5,0], [5,2], [6,3],[8, 3], [8,4],[5,8], [0,10]]).astype(float) #Control pointss
+        sp = spline(d, p=3)
+        s = np.linspace(0,2,300) # Resoluton of plot
+        u_knots = sp.get_knots() # returns the knots to Calculate the base functions at
+        for u in range(1, len(u_knots)-3):
+            N_i =sp.getN_i_k(u_knots,u) # gets the N_i function
+            plotArray=[]
+            for i in s:
+                plotArray.append(N_i(i))
+            plt.plot(s, plotArray, label= "N" + str(u))
+        plt.plot(u_knots, np.zeros(len(u_knots)), '*')
+        plt.legend(loc='best')
+        plt.show()
 
-        steps = 100                               #Nbr of steps to evaluate
-        results = sp.get_points(steps)
-        #Calculate the spline and put the results in a matrix
-        # for i in range(0, steps+1):
-        #     results[i,:] = sp.value(i/steps)
-        # N_bases = sp.getN_i_k
-        # for x in range(len(reults)):
-        #     self.assertEqual(results[x],d[x]*N_bases[x])
-        # print(results)
-        sp.plot(100)
 
 if __name__ == '__main__':
     unittest.main()
