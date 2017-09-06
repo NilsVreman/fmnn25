@@ -62,7 +62,7 @@ class spline:
 
     def get_points(self, steps):
         """
-        Calculate the points on the spline and put them in a matrix
+        Calculate points on the spline at "steps" intervals and put them in a matrix.
 
         steps: Nbr of steps/points to evaluate the spline (resolution)
         return: A vector of point tuples (x,y)
@@ -75,6 +75,14 @@ class spline:
         return results
 
     def plot(self, steps, de_boor=True, ctrl_pol=True):
+        """
+        Calculate points on the spline at "steps" intervals and put them in a matrix.
+        Plot the results.
+
+        steps: Nbr of steps/points to evaluate the spline (resolution)
+        de_boor: Boolean to plot the control points
+        ctrl_pol: Boolean to plot the control polygon
+        """
         results = self.get_points(steps)
         # Plots the spline
         plt.plot(results[:,0], results[:,1])
@@ -104,5 +112,4 @@ if __name__ == '__main__':
     # Create spline object
     sp = spline(d)
     # Plot spline object with control polygon
-    sp.plot(100)
-
+    sp.plot(steps=100)
