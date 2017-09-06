@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 import numpy as np
 
 class spline:
@@ -74,42 +73,5 @@ class spline:
             results[i, :] = self.value(i / steps)
         return results
 
-    def plot(self, steps, de_boor=True, ctrl_pol=True):
-        """
-        Calculate points on the spline at "steps" intervals and put them in a matrix.
-        Plot the results.
-
-        steps: Nbr of steps/points to evaluate the spline (resolution)
-        de_boor: Boolean to plot the control points
-        ctrl_pol: Boolean to plot the control polygon
-        """
-        results = self.get_points(steps)
-        # Plots the spline
-        plt.plot(results[:,0], results[:,1])
-        if de_boor:
-            # Plots control points
-            plt.plot(self.__d[:, 0], self.__d[:, 1], '*')
-
-        if ctrl_pol:
-            # Plots control polygon
-            plt.plot(self.__d[:,0], self.__d[:,1])
-
-        # Sets axes to relate to the max and min control values.
-        xmax, ymax = self.__d.max(axis=0)
-        xmin, ymin = self.__d.min(axis=0)
-        plt.axis([xmin-2, xmax+2, ymin-1, ymax+1])
-        plt.show()
-
-
-
-if __name__ == '__main__':
-    # Create control points
-    d = np.array([[5,2], [14, 2.1], [26,2], [27,1.5],
-                  [27,1.5], [24,1.5], [24,1.5], [27,1.5],
-                  [27,1.5], [26,1], [9,1], [9,1], [10,1],
-                  [10,0], [5,0], [5,0.7], [5,0.7], [5,0],
-                  [0,0], [0,1], [1.5,1.8], [5,2]]).astype(float)
-    # Create spline object
-    sp = spline(d)
-    # Plot spline object with control polygon
-    sp.plot(steps=100)
+    def get_ctrl_points(self):
+        return self.__d
