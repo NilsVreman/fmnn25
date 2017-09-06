@@ -63,7 +63,7 @@ class spline:
         results = np.zeros([steps + 1, len(d[0])])
         # Evaluate for each step
         for i in range(0, steps + 1):
-            results[i, :] = sp.value(i / steps)
+            results[i, :] = self.value(i / steps)
         return results
 
 if __name__ == '__main__':
