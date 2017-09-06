@@ -66,6 +66,22 @@ class spline:
             results[i, :] = self.value(i / steps)
         return results
 
+    def plot(self, steps, de_boor=True, ctrl_pol=True):
+        results = self.get_points(steps)
+        plt.plot(results[:,0], results[:,1])                #Plot the spline
+        if de_boor:
+            plt.plot(self.__d[:, 0], self.__d[:, 1], '*')   #Plot control points
+
+        if ctrl_pol:
+            plt.plot(self.__d[:,0], self.__d[:,1])          #Plot control polygon
+
+        xmax, ymax = self.__d.max(axis=0)
+        xmin, ymin = self.__d.min(axis=0)
+        plt.axis([xmin-2, xmax+2, ymin-1, ymax+1])          #Custom axis
+        plt.show()
+
+
+
 if __name__ == '__main__':
     # Create control points
     d = np.array([[5,2], [14, 2.1], [26,2], [27,1.5],
@@ -75,13 +91,6 @@ if __name__ == '__main__':
                   [0,0], [0,1], [1.5,1.8], [5,2]]).astype(float)
     # Create spline object
     sp = spline(d)
-    # Get "step" amount of points that form the spline and put them in a matrix
-    results = sp.get_points(steps=100)
-    
-    print(results)
+    # Plot spline object with control polygon
+    sp.plot(100)
 
-    plt.plot(results[:,0], results[:,1])    #Plot the spline
-    plt.plot(d[:, 0], d[:, 1], '*')         #Plot control points
-    plt.plot(d[:,0], d[:,1])                #Plot control polygon
-    plt.axis([-2, 30, -0.7, 3.2])           #Custom axis
-    plt.show()
