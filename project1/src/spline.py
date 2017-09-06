@@ -29,11 +29,11 @@ class spline:
         I = np.searchsorted(self.__xi, u) - 1
         d_i = np.array([self.__d[i-1] for i in range(I-self.__p+1, I+1+1)])
         return I, d_i
-    
+
     def value(self, u):
         """
         Calculate a value on the spline given the control points d and a position u (0-1)
-    
+
         d:  Control points {(x_i, y_i)
         u:  The point in which we want to evaluate the spline (0-1)
         p:  Degree of the spline
@@ -68,7 +68,7 @@ class spline:
         return: A vector of point tuples (x,y)
         """
         # Create a matrix to store all result points
-        results = np.zeros([steps + 1, len(d[0])])
+        results = np.zeros([steps + 1, len(self.__d[0])])
         # Evaluate for each step
         for i in range(0, steps + 1):
             results[i, :] = self.value(i / steps)
