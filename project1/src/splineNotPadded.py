@@ -12,14 +12,14 @@ class spline:
         """
         self.__d = d
         self.__p = p
-        
+
         if xi is None:
             #Create knots vector (L = K-2) and pad it with p (degree) repetitions on each side
-            xi = np.zeros(len(d)-2+2*p)
-            xi[-p:] = np.ones(p)
-            xi[p:-p] = np.array([ i for i in np.linspace(0, 1, len(d)-2)])
+            xi = np.zeros(len(d)-2)
+            xi = np.array([ i for i in np.linspace(0, 1, len(d)-2)])
             self.__u_knots=xi[p:-p] # Knots without padding (Might not be needed)
             self.__xi = xi
+            print(xi)
         else: self.__xi = xi
 
     def __find_interval(self, u):
@@ -29,8 +29,13 @@ class spline:
         u:  The point in which we want to evaluate the spline (0-1)
         return: A tuple: The interval index I, relevant control points d_i
         """
-        I = np.searchsorted(self.__xi, u) - 1
-        d_i = np.array([self.__d[i-1] for i in range(I-self.__p+1, I+1+1)])
+        I = np.searchsorted(self.__xi, u)
+        if u not in self.__xi:
+            I -= 1
+
+        print(I)
+        d_i = np.array([self.__d[i] for i in range(I-self.__p+1, I+1+1)])
+        print(d_i)
         return I, d_i
 
     def value(self, u):
@@ -58,9 +63,11 @@ class spline:
         #Evaluation
         for deg_lvl in range(0, p):
             for depth in range(p, deg_lvl, -1):
+                print(I + depth - p, I + depth - deg_lvl, u, xi[I], xi[I+1])
                 alpha = (xi[I + depth - deg_lvl] - u) / (xi[I + depth - deg_lvl] - xi[I + depth - p])
                 d_i[depth] = alpha*d_i[depth-1] + (1-alpha)*d_i[depth]
 
+        print(d_i[p])
         return d_i[p]
 
     def interpolate(self, xi, points):
@@ -101,10 +108,18 @@ class spline:
         return: A vector of point tuples (x,y)
         """
         # Create a matrix to store all result points
-        results = np.zeros([steps + 1, len(self.__d[0])])
+        results = np.zeros([steps, len(self.__d[0])])
         # Evaluate for each step
-        for i in range(0, steps + 1):
-            results[i, :] = self.value(i / steps)
+        counter = 0
+        for i in np.linspace(self.__xi[2], self.__xi[-3]-1/steps, steps): #range(0, steps + 1):
+            try:
+                results[counter, :] = self.value(i)
+                counter +=1
+            except Exception as e:
+                print(e)
+                pass
+
+        print(results)
         return results
 
     def get_ctrl_points(self):
