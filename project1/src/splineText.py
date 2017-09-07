@@ -35,11 +35,15 @@ class spline:
             else:
                 return 0
         else:
-            return (((u - I[i-1])/ (I[i + k - 1] - I[i-1])) * self.getN_i_k(i, u, I, k - 1) +
-                    ((I[i+k] - u)/(I[i+k] - I[i])) * self.getN_i_k(i+1, u, I, k - 1))
+            return (((u - I[i-1])/ (I[i + k - 1] - I[i-1])) * self.getN_i_k(self, i, u, I, (k - 1)) + ((I[i+k] - u)/(I[i+k] - I[i])) * self.getN_i_k(self, i+1, u, I, (k - 1)))
                     
-    def skl(self, u, di, p, I):
-        pass
+    def s(self, u, di, k, I):
+        i = self.findHotInterval(self, u, I)
+        x = (self.getN_i_k(self, i - 2, u, I, k) + self.getN_i_k(self, i - 1, u, I, k) +
+                self.getN_i_k(self, i, u, I, k) + self.getN_i_k(self, i + 1, u, I, k))
+        y = (self.getN_i_k(self, i - 2, u, I, k) + self.getN_i_k(self, i - 1, u, I, k) +
+                self.getN_i_k(self, i, u, I, k) + self.getN_i_k(self, i + 1, u, I, k))
+        return [x, y]
     
     def findHotInterval(self, u, I):
         for x in range(0, len(I)):
@@ -57,5 +61,5 @@ if __name__ == '__main__':
     """
     xi = np.array([0, 0, 0, 0.25, 0.5, 0.75, 1.0, 1.0, 1.0])
     s = spline
-    x = spline.findHotInterval(s, 0.26, xi)
+    x = spline.s(s, 0.26, [1], 3, xi)
     print(x)

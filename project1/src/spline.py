@@ -54,7 +54,7 @@ class spline:
 
 
 if __name__ == '__main__':
-    d = np.array([[0,0], [5,0], [8, 3], [5,5], [0,10]]).astype(float)   #Control points
+    d = np.array([[0,0], [5,0], [8, 3], [5,8], [0,10]]).astype(float)   #Control points
     sp = spline(d)
     steps = 100                                                 #Nbr of steps to evaluate
     results = np.zeros([steps+1, 2])                            #All results for each step
