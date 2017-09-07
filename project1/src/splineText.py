@@ -59,7 +59,5 @@ if __name__ == '__main__':
     for i in np.arange(0.01, 0.99, 0.01):
         print(f.value(xi, d, i))
     """
-    xi = np.array([0, 0, 0, 0.25, 0.5, 0.75, 1.0, 1.0, 1.0])
-    s = spline
-    x = spline.s(s, 0.26, [1], 3, xi)
-    print(x)
+    for x in range(0,3):
+        print(x)
