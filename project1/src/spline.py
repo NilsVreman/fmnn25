@@ -1,9 +1,14 @@
-import matplotlib.pyplot as plt
 import numpy as np
 
 class spline:
 
     def __init__(self, d, p=3):
+        """
+        Creates a spline of degree p based on the points d=[[dx1,dy1], ..., [dxn, dyn]]
+
+        d: The control points
+        p: The spline degree
+        """
         self.__d = d
         self.__p = p
 
@@ -11,21 +16,24 @@ class spline:
         xi = np.zeros(len(d)-2+2*p)
         xi[-p:] = np.ones(p)
         xi[p:-p] = np.array([ i for i in np.linspace(0, 1, len(d)-2)])
+        self.__u_knots=xi[p:-p] # Knots without padding (Might not be needed)
         self.__xi = xi
 
     def __find_interval(self, u):
         """
+        Finds the interval in which u is located. Returns this index and the relevant control points
+
         u:  The point in which we want to evaluate the spline (0-1)
         return: A tuple: The interval index I, relevant control points d_i
         """
         I = np.searchsorted(self.__xi, u) - 1
         d_i = np.array([self.__d[i-1] for i in range(I-self.__p+1, I+1+1)])
         return I, d_i
-    
+
     def value(self, u):
         """
         Calculate a value on the spline given the control points d and a position u (0-1)
-    
+
         d:  Control points {(x_i, y_i)
         u:  The point in which we want to evaluate the spline (0-1)
         p:  Degree of the spline
@@ -52,19 +60,67 @@ class spline:
 
         return d_i[p]
 
+    def get_points(self, steps):
+        """
+        Calculate points on the spline at "steps" intervals and put them in a matrix.
 
-if __name__ == '__main__':
-    d = np.array([[0,0], [5,0], [8, 3], [5,8], [0,10]]).astype(float)   #Control points
-    sp = spline(d)
-    steps = 100                                                 #Nbr of steps to evaluate
-    results = np.zeros([steps+1, 2])                            #All results for each step
+        steps: Nbr of steps/points to evaluate the spline (resolution)
+        return: A vector of point tuples (x,y)
+        """
+        # Create a matrix to store all result points
+        results = np.zeros([steps + 1, len(self.__d[0])])
+        # Evaluate for each step
+        for i in range(0, steps + 1):
+            results[i, :] = self.value(i / steps)
+        return results
 
-    #Calculate the spline and put the results in a matrix
-    for i in range(0, steps+1):
-        results[i,:] = sp.value(i/steps)
-        print(results[i])
+    def get_ctrl_points(self):
+        return self.__d
 
-    plt.plot(results[:,0], results[:,1])    #Plot the spline
-    plt.plot(d[:, 0], d[:, 1], '*')         #Plot control points
-    plt.plot(d[:,0], d[:,1])                #Plot control polygon
-    plt.show()
+    def get_knots(self):
+        return self.__u_knots
+
+    def getN_i_k(self, xi, i):
+        """
+        Sets the knots and index
+
+        u:  The point in which we want to evaluate the value of N
+        return: the function to evaluate basis function N in u
+        """
+        self.__base_knots = xi
+        self.__i = i
+        return self.N_base
+
+    def N_base(self,u):
+        xi = self.__base_knots # The knots to create base functions at
+        i = self.__i # The index of the base function
+        return self.__get_N_base(i, u, xi, self.__p)
+
+    def __get_N_base(self, i ,u, xi, k):
+        """
+        Calculate the N basis function by recursion
+
+        i:  index of basis function
+        u:  The point in which we want to evaluate the value of N
+        xi: The knots that we want to create a spline through
+        k:  Degree of the spline
+        return: value of basis function N in u
+        """
+        if k == 0:
+            if xi[i - 1] == xi[i]:
+                return 0
+            elif (u >= xi[i-1] and u < xi[i]):
+                return 1
+            else:
+                return 0
+        else:
+            return (self.__getMultVal(u - xi[i-1], xi[i + k - 1] - xi[i-1]) * self.__get_N_base(i, u, xi, k - 1) +
+                    self.__getMultVal(xi[i+k] - u, xi[i+k] - xi[i]) * self.__get_N_base(i+1, u, xi, k - 1))
+
+    """
+    Redefines divde by zero to 0/0 = 0
+    """
+    def __getMultVal(self,t,n):
+        if(n == 0.0):
+            return 0.0
+        return t/n
