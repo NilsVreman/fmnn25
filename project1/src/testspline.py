@@ -13,9 +13,12 @@ class TestSpline(unittest.TestCase):
     #     self.assertFalse('Foo'.isupper())
 
     def test_splinecalc(self):
+        
+        
         p = 3
         d = np.array([[0,0], [5,0], [5,2], [8, 3], [5,8], [0,10]]).astype(float) #Control points
         sp = spline(d, p=3)
+        sp.test()
 
     def test_plot_N(self):
         d = np.array([[0,0], [3,1], [4,1], [5,0], [5,2], [6,3],[8, 3], [8,4],[5,8], [0,10]]).astype(float) #Control pointss

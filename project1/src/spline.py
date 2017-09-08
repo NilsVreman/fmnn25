@@ -1,5 +1,6 @@
 import numpy as np
 import scipy as sp
+import plot_splines as ps
 
 class spline:
 
@@ -77,17 +78,33 @@ class spline:
             for j in range(0, L):
                 N = self.__get_N_base(j, G_abscissae, xi, 3)
                 NMat[i,j] = N
+                print(N)
         
-        dx = sp.linalg.solve_banded((3,3),NMat,points[0])
-        dy = sp.linalg.solve_banded((3,3),NMat,points[1])
+        print(NMat)
+        print(np.linalg.det(NMat))
+        
+        dx = sp.linalg.solve(NMat,points[0])
+        dy = sp.linalg.solve(NMat,points[1])
         
         print([dx,dy])
+        
+        d = [[0 for x in range(len(dx))] for y in range(len(dx))] 
+        for x in range(0,len(dx)):
+            d[x] = np.array([dx[x],dy[x]])
+        
+        xiny = np.hstack([0, xi, 1])
+        spli = spline(d, xiny, 3)
+        p = ps.plot_splines()
+        p.add_spline(spli)
+        p.plot_all()
         
         
     def test(self):
         print("ok")
-        xi = np.array([0,0,0,0.25,0.5,0.75,1,1,1])
-        points = np.array([[1,2,3,4,5,6,7],[7,6,5,4,3,2,1]])
+        xi = np.linspace(0,1.,8)
+        xi = np.hstack([0,0, xi, 1,1])
+        print(xi)
+        points = np.array([[-8.18548387, -7.13709677, -2.82258065, -2.37903226,  1.00806452, 2.41935484,  4.87903226,  5.88709677,  6.93548387,  7.41935484], [4.18410042, -3.45188285,  5.75313808, -2.71966527,  8.21129707, -3.66108787,  4.55020921, -0.31380753,  7.4790795 , -3.9748954]])
         
         self.interpolate(xi, points)
                 
@@ -139,25 +156,31 @@ class spline:
         k:  Degree of the spline
         return: value of basis function N in u
         """
-        try:
-            if k == 0:
-                if xi[i - 1] == xi[i]:
-                    return 0
-                elif (u >= xi[i-1] and u < xi[i]):
-                    return 1
-                else:
-                    return 0
-            else:
-                return (self.__getMultVal(u - xi[i-1], xi[i + k - 1] - xi[i-1]) * self.__get_N_base(i, u, xi, k - 1) +
-                        self.__getMultVal(xi[i+k] - u, xi[i+k] - xi[i]) * self.__get_N_base(i+1, u, xi, k - 1))
-        except IndexError:
-            return 0.0
         
-
-    """
-    Redefines divde by zero to 0/0 = 0
-    """
+        if k == 0:
+            if self.getU(xi, i - 1) == self.getU(xi, i):
+                return 0
+            elif (u >= self.getU(xi,i-1) and u < self.getU(xi, i)):
+                return 1
+            else:
+                return 0
+        else:
+            return (self.__getMultVal(u - self.getU(xi, i-1), self.getU(xi, i + k - 1) - self.getU(xi, i-1)) * self.__get_N_base(i, u, xi, k - 1) +
+                    self.__getMultVal(self.getU(xi, i+k) - u, self.getU(xi,i+k) - self.getU(xi, i)) * self.__get_N_base(i+1, u, xi, k - 1))
+        
+        
+    def getU(self, xi, i):
+        if i < 0:
+            return 0
+        elif i >= len(xi):
+            return 10
+        else:
+            return xi[i]   
+    
     def __getMultVal(self,t,n):
+        """
+        Redefines divde by zero to 0/0 = 0
+        """
         if(n == 0.0):
             return 0.0
         return t/n
