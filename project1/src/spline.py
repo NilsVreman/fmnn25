@@ -96,7 +96,9 @@ class spline:
         spli = spline(d, xiny, 3)
         p = ps.plot_splines()
         p.add_spline(spli)
-        p.plot_all()
+        "p.plot_all()"
+        
+        p.plot_all2(points)
         
         
     def test(self):
