@@ -31,7 +31,7 @@ class TestSpline(unittest.TestCase):
         plt.plot(results[:,0], results[:,1], label="Spline")
         plt.legend(loc='best')
         plt.show()
-        print("S(u)=Sum[d_i*N_i] OK")
+        print("S(u)=Sum[d_i*N_i] OK\n")
 
     def test_splinecalc(self):
         d = np.array([[0,0], [5,0], [5,2], [8, 3], [5,8], [0,10]]).astype(float) #Control points

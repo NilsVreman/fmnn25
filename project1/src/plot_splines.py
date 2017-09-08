@@ -15,7 +15,7 @@ class plot_splines:
         
         self.__sp.append(s)
 
-    def plot_all(self, steps=100, de_boor=True, ctrl_pol=True):
+    def plot_all(self, points = None, steps=100, de_boor=True, ctrl_pol=True):
         """
         Calculate points on the spline at "steps" intervals and put them in a matrix.
         Plot the results.
@@ -32,6 +32,7 @@ class plot_splines:
             # Plots the spline
             plt.plot(results[:,0], results[:,1])
             d = self.__sp[i].get_ctrl_points()
+            print(d)
 
             if de_boor:
                 # Plots control points
@@ -40,6 +41,8 @@ class plot_splines:
             if ctrl_pol:
                 # Plots control polygon
                 plt.plot(d[:,0], d[:,1])
+            if points is not None:
+                plt.plot(points[0,:], points[1,:], '+')
 
             # Sets axes to relate to the max and min control values.
             xmax, ymax = d.max(axis=0)
@@ -50,39 +53,6 @@ class plot_splines:
             y_up = ymax if ymax > y_up else y_up
 
         plt.axis([x_low-2, x_up+2, y_low-1, y_up+1])
-        plt.show()
-
-    def plot_all2(self, points, steps=100, de_boor=True, ctrl_pol=True):
-        x_low, x_up = 0, 0
-        y_low, y_up = 0, 0
-
-        
-        plt.plot(points[0,:], points[1,:], '+')
-
-        for i in range(0, len(self.__sp)):
-            results = self.__sp[i].get_points(steps)
-            # Plots the spline
-            plt.plot(results[:,0], results[:,1])
-            d = self.__sp[i].get_ctrl_points()
-
-            if de_boor:
-                # Plots control points
-                plt.plot(d[:, 0], d[:, 1], '*')
-
-            if ctrl_pol:
-                # Plots control polygon
-                plt.plot(d[:,0], d[:,1])
-
-            # Sets axes to relate to the max and min control values.
-            xmax, ymax = d.max(axis=0)
-            xmin, ymin = d.min(axis=0)
-            x_low = xmin if xmin < x_low else x_low
-            x_up = xmax if xmax > x_up else x_up
-            y_low = ymin if ymin < y_low else y_low
-            y_up = ymax if ymax > y_up else y_up        
-
-        
-        
         plt.show()
 
 if __name__ == '__main__':
