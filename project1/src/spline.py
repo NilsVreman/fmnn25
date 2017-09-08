@@ -1,5 +1,5 @@
 import numpy as np
-import scipy as sp
+import scipy.linalg as sp
 import plot_splines as ps
 
 class spline:
@@ -81,8 +81,8 @@ class spline:
                 NMat[i,j] = N
 
 
-        dx = sp.linalg.solve(NMat,points[0])
-        dy = sp.linalg.solve(NMat,points[1])
+        dx = sp.solve(NMat,points[0])
+        dy = sp.solve(NMat,points[1])
 
 
         d = np.array([[0.0 for x in range(2)] for y in range(len(dx))])

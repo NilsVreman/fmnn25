@@ -12,7 +12,7 @@ class plot_splines:
         """
         if not isinstance(s, spl.spline):
             raise Exception('Error: Instance not spline')
-        
+
         self.__sp.append(s)
 
     def plot_all(self, points = None, steps=100, de_boor=True, ctrl_pol=True):
@@ -32,7 +32,6 @@ class plot_splines:
             # Plots the spline
             plt.plot(results[:,0], results[:,1])
             d = self.__sp[i].get_ctrl_points()
-            print(d)
 
             if de_boor:
                 # Plots control points
