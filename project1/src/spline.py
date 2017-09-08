@@ -13,15 +13,15 @@ class spline:
         """
         self.__d = d
         self.__p = p
-        
+
         if xi is None:
             #Create knots vector (K=L+2)
             xi1 = np.zeros(p-1)
             xi2 = np.array([ i for i in np.linspace(0, 1, len(d)-2)])
             xi3 = np.ones(p - 1)
-            
+
             self.__xi = np.hstack([xi1, xi2, xi3])
-            
+
         else: self.__xi = xi
 
     def __find_interval(self, u):
@@ -62,7 +62,7 @@ class spline:
             for depth in range(p, deg_lvl, -1):
                 alpha = (xi[I + depth - deg_lvl] - u) / (xi[I + depth - deg_lvl] - xi[I + depth - p])
                 d_i[depth] = alpha*d_i[depth-1] + (1-alpha)*d_i[depth]
-        
+
         return d_i[p]
 
     def interpolate(self, xi, points):
@@ -70,41 +70,41 @@ class spline:
             raise valueError("Need atleast 4 points")
         if len(points[0]) != (len(xi) - 2):
             raise valueError("Number of points and knots doesnt match")
-        
+
         L = len(points[0])
         NMat = np.zeros((L,L))
-        
+
         for i  in range(0, L):
             G_abscissae = (xi[i] + xi[i+1] + xi[i+2])/3
             for j in range(0, L):
                 N = self.__get_N_base(j, G_abscissae, xi, 3)
                 NMat[i,j] = N
-        
-        
+
+
         dx = sp.linalg.solve(NMat,points[0])
         dy = sp.linalg.solve(NMat,points[1])
-        
-        
-        d = np.array([[0.0 for x in range(2)] for y in range(len(dx))]) 
+
+
+        d = np.array([[0.0 for x in range(2)] for y in range(len(dx))])
         for x in range(0,len(dx)):
             d[x] = np.array([dx[x],dy[x]])
-  
+
         spli = spline(d, xi, 3)
         p = ps.plot_splines()
         p.add_spline(spli)
-        
+
         p.plot_all(points)
-        
-        
+
+
     def test(self):
         xi = np.linspace(0,1.,8)
         xi = np.hstack([0,0, xi, 1,1])
         points = np.array([[-8.18548387, -7.13709677, -2.82258065, -2.37903226,  1.00806452, 2.41935484,  4.87903226,  5.88709677,  6.93548387,  7.41935484], [4.18410042, -3.45188285,  5.75313808, -2.71966527,  8.21129707, -3.66108787,  4.55020921, -0.31380753,  7.4790795 , -3.9748954]])
-        
-        self.interpolate(xi, points)
-                
 
-                
+        self.interpolate(xi, points)
+
+
+
     def get_points(self, steps):
         """
         Calculate points on the spline at "steps" intervals and put them in a matrix.
@@ -123,7 +123,7 @@ class spline:
         return self.__d
 
     def get_knots(self):
-        return self.__u_knots
+        return self.__xi
 
     def getN_i_k(self, xi, i):
         """
@@ -151,7 +151,7 @@ class spline:
         k:  Degree of the spline
         return: value of basis function N in u
         """
-        
+
         if k == 0:
             if self.getU(xi, i - 1) == self.getU(xi, i):
                 return 0
@@ -162,16 +162,16 @@ class spline:
         else:
             return (self.__getMultVal(u - self.getU(xi, i-1), self.getU(xi, i + k - 1) - self.getU(xi, i-1)) * self.__get_N_base(i, u, xi, k - 1) +
                     self.__getMultVal(self.getU(xi, i+k) - u, self.getU(xi,i+k) - self.getU(xi, i)) * self.__get_N_base(i+1, u, xi, k - 1))
-        
-        
+
+
     def getU(self, xi, i):
         if i < 0:
             return 0
         elif i >= len(xi):
             return 10
         else:
-            return xi[i]   
-    
+            return xi[i]
+
     def __getMultVal(self,t,n):
         """
         Redefines divde by zero to 0/0 = 0
