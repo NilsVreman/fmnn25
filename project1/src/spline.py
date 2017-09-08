@@ -12,13 +12,17 @@ class spline:
         """
         self.__d = d
         self.__p = p
-        
+
         if xi is None:
             #Create knots vector (L = K-2) and pad it with p (degree) repetitions on each side
             xi = np.zeros(len(d)-2+2*p)
             xi[-p:] = np.ones(p)
             xi[p:-p] = np.array([ i for i in np.linspace(0, 1, len(d)-2)])
-            self.__u_knots=xi[p:-p] # Knots without padding (Might not be needed)
+            const=2
+            u_knots=np.zeros(len(d)+const)
+            u_knots = np.array([ i for i in np.linspace(0, 1, len(d)+const)])
+            self.__xi = xi
+            self.__u_knots= u_knots # Knots without padding (Might not be needed)
             self.__xi = xi
         else: self.__xi = xi
 
@@ -68,31 +72,31 @@ class spline:
             raise valueError("Need atleast 4 points")
         if len(points[0]) != (len(xi) - 2):
             raise valueError("Number of points and knots doesnt match")
-        
+
         L = len(points[0])
         NMat = np.zeros((L,L))
-        
+
         for i  in range(0, L):
             G_abscissae = (xi[i] + xi[i+1] + xi[i+2])/3
             for j in range(0, L):
                 N = self.__get_N_base(j, G_abscissae, xi, 3)
                 NMat[i,j] = N
-        
+
         dx = sp.linalg.solve_banded((3,3),NMat,points[0])
         dy = sp.linalg.solve_banded((3,3),NMat,points[1])
-        
+
         print([dx,dy])
-        
-        
+
+
     def test(self):
         print("ok")
         xi = np.array([0,0,0,0.25,0.5,0.75,1,1,1])
         points = np.array([[1,2,3,4,5,6,7],[7,6,5,4,3,2,1]])
-        
-        self.interpolate(xi, points)
-                
 
-                
+        self.interpolate(xi, points)
+
+
+
     def get_points(self, steps):
         """
         Calculate points on the spline at "steps" intervals and put them in a matrix.
@@ -139,23 +143,24 @@ class spline:
         k:  Degree of the spline
         return: value of basis function N in u
         """
-        try:
-            if k == 0:
-                if xi[i - 1] == xi[i]:
-                    return 0
-                elif (u >= xi[i-1] and u < xi[i]):
-                    return 1
-                else:
-                    return 0
+        if k == 0:
+            if i == 0 or i > len(xi)-1 or xi[i - 1] == xi[i]:
+                return 0
+            elif (u >= xi[i-1] and u < xi[i]):
+                return 1
             else:
+                return 0
+        else:
+            try:
                 return (self.__getMultVal(u - xi[i-1], xi[i + k - 1] - xi[i-1]) * self.__get_N_base(i, u, xi, k - 1) +
-                        self.__getMultVal(xi[i+k] - u, xi[i+k] - xi[i]) * self.__get_N_base(i+1, u, xi, k - 1))
-        except IndexError:
-            return 0.0
-        
+                    self.__getMultVal(xi[i+k] - u, xi[i+k] - xi[i]) * self.__get_N_base(i+1, u, xi, k - 1))
+            except IndexError:
+                return (self.__getMultVal(u - xi[i-1], xi[i + k - 1] - xi[i-1]) * self.__get_N_base(i, u, xi, k - 1) +
+                    self.__getMultVal(0.0 - u, 0.0 - xi[i]) * self.__get_N_base(i+1, u, xi, k - 1))
+
 
     """
-    Redefines divde by zero to 0/0 = 0
+    Redefines divide by zero to 0/0 = 0
     """
     def __getMultVal(self,t,n):
         if(n == 0.0):
