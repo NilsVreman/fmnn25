@@ -12,7 +12,7 @@ class plot_splines:
         """
         if not isinstance(s, spl.spline):
             raise Exception('Error: Instance not spline')
-        
+
         self.__sp.append(s)
 
     def plot_all(self, points = None, steps=100, de_boor=True, ctrl_pol=True):
