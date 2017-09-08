@@ -2,6 +2,7 @@ import unittest
 from spline import spline
 import numpy as np
 import matplotlib.pyplot as plt
+import plot_splines as ps
 
 class TestSpline(unittest.TestCase):
     '''
@@ -36,7 +37,18 @@ class TestSpline(unittest.TestCase):
     def test_splinecalc(self):
         d = np.array([[0,0], [5,0], [5,2], [8, 3], [5,8], [0,10]]).astype(float) #Control points
         sp = spline(d, p=3)
-        # sp.test()
+
+    def test_interpolate(self):
+        xi = np.linspace(0,1.,8)
+        xi = np.hstack([0,0, xi, 1,1])
+        points = np.array([[0.0,2.7,3.37,8.0,10.0,13.37,15.0,16.0,18.2,21.0],[-2.0,3.0,1.0,4.0,-4.0,0.0,0.0,3.0,6.0,-2.0]])
+        sp1 = spline(points)
+        
+        d = sp1.interpolate(xi, points)
+        sp2 = spline(d, xi, 3)
+        psp = ps.plot_splines()
+        psp.add_spline(sp2)
+        psp.plot_all(points, de_boor=False, ctrl_pol=False)
 
     def plot_N(self):
         d = np.array([[0,0], [3,1], [4,1], [5,0], [5,2], [6,3],[8, 3], [8,4],[5,8], [0,10]]).astype(float) #Control pointss

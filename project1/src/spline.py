@@ -1,5 +1,5 @@
 import numpy as np
-import scipy as sp
+import scipy.linalg as sp
 import plot_splines as ps
 
 class spline:
@@ -81,29 +81,15 @@ class spline:
                 NMat[i,j] = N
 
 
-        dx = sp.linalg.solve(NMat,points[0])
-        dy = sp.linalg.solve(NMat,points[1])
+        dx = sp.solve(NMat,points[0])
+        dy = sp.solve(NMat,points[1])
 
 
         d = np.array([[0.0 for x in range(2)] for y in range(len(dx))])
         for x in range(0,len(dx)):
             d[x] = np.array([dx[x],dy[x]])
 
-        spli = spline(d, xi, 3)
-        p = ps.plot_splines()
-        p.add_spline(spli)
-
-        p.plot_all(points)
-
-
-    def test(self):
-        xi = np.linspace(0,1.,8)
-        xi = np.hstack([0,0, xi, 1,1])
-        points = np.array([[-8.18548387, -7.13709677, -2.82258065, -2.37903226,  1.00806452, 2.41935484,  4.87903226,  5.88709677,  6.93548387,  7.41935484], [4.18410042, -3.45188285,  5.75313808, -2.71966527,  8.21129707, -3.66108787,  4.55020921, -0.31380753,  7.4790795 , -3.9748954]])
-
-        self.interpolate(xi, points)
-
-
+        return d
 
     def get_points(self, steps):
         """
