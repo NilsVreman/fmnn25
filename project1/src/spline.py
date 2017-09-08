@@ -15,12 +15,14 @@ class spline:
         self.__p = p
         
         if xi is None:
-            #Create knots vector (L = K-2) and pad it with p (degree) repetitions on each side
-            xi = np.zeros(len(d)-2+2*p)
-            xi[-p:] = np.ones(p)
-            xi[p:-p] = np.array([ i for i in np.linspace(0, 1, len(d)-2)])
-            self.__u_knots=xi[p:-p] # Knots without padding (Might not be needed)
+            #Create knots vector (K=L+2)
+            xi1 = np.zeros(p-1)
+            xi2 = np.array([ i for i in np.linspace(0, 1, len(d)-2)])
+            xi3 = np.ones(p - 1)
+            xi = np.append(np.append(xi1, xi2), xi3)
+            print(xi)
             self.__xi = xi
+
         else: self.__xi = xi
 
     def __find_interval(self, u):
@@ -31,7 +33,7 @@ class spline:
         return: A tuple: The interval index I, relevant control points d_i
         """
         I = np.searchsorted(self.__xi, u) - 1
-        d_i = np.array([self.__d[i-1] for i in range(I-self.__p+1, I+1+1)])
+        d_i = np.array([self.__d[i] for i in range(I-self.__p+1, I+1+1)])
         return I, d_i
 
     def value(self, u):
@@ -56,12 +58,15 @@ class spline:
         #Put surrounding p+1 control points that are influencing the final value in a vector
         I, d_i = self.__find_interval(u)
 
+        print(d_i)
         #Evaluation
         for deg_lvl in range(0, p):
             for depth in range(p, deg_lvl, -1):
+                print(depth)
                 alpha = (xi[I + depth - deg_lvl] - u) / (xi[I + depth - deg_lvl] - xi[I + depth - p])
                 d_i[depth] = alpha*d_i[depth-1] + (1-alpha)*d_i[depth]
 
+        print("-----")
         return d_i[p]
 
     def interpolate(self, xi, points):
