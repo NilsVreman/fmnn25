@@ -19,10 +19,9 @@ class spline:
             xi1 = np.zeros(p-1)
             xi2 = np.array([ i for i in np.linspace(0, 1, len(d)-2)])
             xi3 = np.ones(p - 1)
-            xi = np.append(np.append(xi1, xi2), xi3)
-            print(xi)
-            self.__xi = xi
-
+            
+            self.__xi = np.hstack([xi1, xi2, xi3])
+            
         else: self.__xi = xi
 
     def __find_interval(self, u):
@@ -58,15 +57,12 @@ class spline:
         #Put surrounding p+1 control points that are influencing the final value in a vector
         I, d_i = self.__find_interval(u)
 
-        print(d_i)
         #Evaluation
         for deg_lvl in range(0, p):
             for depth in range(p, deg_lvl, -1):
-                print(depth)
                 alpha = (xi[I + depth - deg_lvl] - u) / (xi[I + depth - deg_lvl] - xi[I + depth - p])
                 d_i[depth] = alpha*d_i[depth-1] + (1-alpha)*d_i[depth]
-
-        print("-----")
+        
         return d_i[p]
 
     def interpolate(self, xi, points):
@@ -83,34 +79,26 @@ class spline:
             for j in range(0, L):
                 N = self.__get_N_base(j, G_abscissae, xi, 3)
                 NMat[i,j] = N
-                print(N)
         
-        print(NMat)
-        print(np.linalg.det(NMat))
         
         dx = sp.linalg.solve(NMat,points[0])
         dy = sp.linalg.solve(NMat,points[1])
         
-        print([dx,dy])
         
-        d = [[0 for x in range(len(dx))] for y in range(len(dx))] 
+        d = np.array([[0.0 for x in range(2)] for y in range(len(dx))]) 
         for x in range(0,len(dx)):
             d[x] = np.array([dx[x],dy[x]])
-        
-        xiny = np.hstack([0, xi, 1])
-        spli = spline(d, xiny, 3)
+  
+        spli = spline(d, xi, 3)
         p = ps.plot_splines()
         p.add_spline(spli)
-        "p.plot_all()"
         
-        p.plot_all2(points)
+        p.plot_all(points)
         
         
     def test(self):
-        print("ok")
         xi = np.linspace(0,1.,8)
         xi = np.hstack([0,0, xi, 1,1])
-        print(xi)
         points = np.array([[-8.18548387, -7.13709677, -2.82258065, -2.37903226,  1.00806452, 2.41935484,  4.87903226,  5.88709677,  6.93548387,  7.41935484], [4.18410042, -3.45188285,  5.75313808, -2.71966527,  8.21129707, -3.66108787,  4.55020921, -0.31380753,  7.4790795 , -3.9748954]])
         
         self.interpolate(xi, points)
