@@ -32,7 +32,6 @@ class plot_splines:
             # Plots the spline
             plt.plot(results[:,0], results[:,1])
             d = self.__sp[i].get_ctrl_points()
-            print(d)
 
             if de_boor:
                 # Plots control points
