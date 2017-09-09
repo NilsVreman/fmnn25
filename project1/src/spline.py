@@ -4,7 +4,7 @@ import plot_splines as ps
 
 class spline:
 
-    def __init__(self, d, xi=None, p=3):
+    def __init__(self, d, steps=100, xi=None, p=3):
         """
         Creates a spline of degree p based on the points d=[[dx1,dy1], ..., [dxn, dyn]]
 
@@ -12,6 +12,7 @@ class spline:
         p: The spline degree
         """
         self.__d = d
+        self.__steps = steps
         self.__p = p
         self.__interpolation_points = None
 
@@ -25,7 +26,7 @@ class spline:
 
         else: self.__xi = xi
 
-    def __call__(self, interpolation, steps=100, de_boor=True, ctrl_pol=True):
+    def __call__(self, interpolation, de_boor=True, ctrl_pol=True):
         if interpolation:
             self.__d = self.interpolate()
 
@@ -107,7 +108,115 @@ class spline:
         
         return self.__d
 
-    def get_spline_values(self, steps):
+    def is_cyclic(self):
+        min = self.__d[0, 0]
+        max = self.__d[0, 0]
+        for x in self.__d[:, 0]:
+            if x >= max:
+                max = x
+            else:
+                return True
+        return False
+
+    # Find interval min and max in x of the spline
+    def get_min_max(self):
+        min = self.__d[0, 0]
+        max = self.__d[0, 0]
+        for x in self.__d[:, 0]:
+            if x >= max:
+                max = x
+        return min, max
+
+    def get_u_min_max(self, min, max):
+        u_min = 0
+        for i in range(0, self.__steps + 1):
+            if self.value(i / self.__steps)[0] >= min:
+                u_min = i / self.__steps
+                break
+
+        u_max = 0
+        for i in range(0, self.__steps + 1):
+            if self.value(i / self.__steps)[0] >= max:
+                u_max = i / self.__steps
+                break
+
+        return u_min, u_max
+
+    def __add__(self, sp2):
+        if type(sp2) is not spline:
+            raise Exception("Spline 2 is not a spline")
+        if self.is_cyclic():
+            raise Exception("Spline 1 is cyclic")
+        if sp2.is_cyclic():
+            raise Exception("Spline 2 is cyclic")
+
+        # Get interval in x of both splines
+        min1, max1 = self.get_min_max()
+        min2, max2 = sp2.get_min_max()
+
+        # Get intersection interval of both splines
+        min3 = max(min1, min2)
+        max3 = min(max1, max2)
+
+        # Get intersection interval of both splines in u instead of x
+        u_min3_sp1, u_max3_sp1 = self.get_u_min_max(min3, max3)
+        u_min3_sp2, u_max3_sp2 = sp2.get_u_min_max(min3, max3)
+
+        # Create a vector with u values in the interval with "steps" many points
+        u_vec_sp1 = None
+        for i in np.linspace(0, 1, self.__steps + 1):
+            if i < u_min3_sp1:
+                continue
+            u_vec_sp1 = np.linspace(i, u_max3_sp1, self.__steps + 1)
+            break
+
+        u_vec_sp2 = None
+        for i in np.linspace(0, 1, self.__steps + 1):
+            if i < u_min3_sp2:
+                continue
+            u_vec_sp2 = np.linspace(i, u_max3_sp2, self.__steps + 1)
+            break
+
+        #Find which spline has the min x value. Set left_most_sp to that.
+        left_most_sp = None
+        right_most_sp = None
+        if self.value(u_vec_sp1[0])[0] <= sp2.value(u_vec_sp2[0])[0]:
+            left_most_sp = self
+            right_most_sp = sp2
+        else:
+            temp = np.array(u_vec_sp1)
+            left_most_sp = sp2
+            right_most_sp = self
+            u_vec_sp1 = u_vec_sp2
+            u_vec_sp2 = temp
+
+        # Fix u_vec_sp2 so that for every x, f(u1) = f(u2), it aligns with u_vec_sp1
+        for i in range(0, self.__steps):
+            divide = 2
+            while abs(left_most_sp.value(u_vec_sp1[i])[0] - right_most_sp.value(u_vec_sp2[i])[0]) > 1/self.__steps:
+                if left_most_sp.value(u_vec_sp1[i])[0] < right_most_sp.value(u_vec_sp2[i])[0]:
+                    while u_vec_sp2[i] - abs(u_vec_sp1[i] - u_vec_sp2[i]) / divide < 0:
+                        divide += 1
+                    u_vec_sp2[i] -= abs(u_vec_sp1[i] - u_vec_sp2[i]) / divide
+
+                elif left_most_sp.value(u_vec_sp1[i])[0] > right_most_sp.value(u_vec_sp2[i])[0]:
+                    while u_vec_sp2[i] + abs(u_vec_sp1[i] - u_vec_sp2[i]) / divide > 1:
+                        divide += 1
+                    u_vec_sp2[i] += abs(u_vec_sp1[i] - u_vec_sp2[i]) / divide
+
+        # Create a matrix to store all result points
+        results = np.zeros([self.__steps + 1, len(self.__d[0])])
+
+        for i in range(0, self.__steps + 1):
+            results[i, 0] = left_most_sp.value(u_vec_sp1[i])[0]
+            results[i, 1] = left_most_sp.value(u_vec_sp1[i])[1] + right_most_sp.value(u_vec_sp2[i])[1]
+
+        sp3 = spline(results, self.__steps)
+        sp3.interpolate()
+
+        return sp3
+
+    def get_spline_values(self):
         """
         Calculate points on the spline at "steps" intervals and put them in a matrix.
 
@@ -115,10 +224,10 @@ class spline:
         return: A vector of point tuples (x,y)
         """
         # Create a matrix to store all result points
-        results = np.zeros([steps + 1, len(self.__d[0])])
+        results = np.zeros([self.__steps + 1, len(self.__d[0])])
         # Evaluate for each step
-        for i in range(0, steps + 1):
-            results[i, :] = self.value(i / steps)
+        for i in range(0, self.__steps + 1):
+            results[i, :] = self.value(i / self.__steps)
         return results
 
     def get_interpolation_points(self):

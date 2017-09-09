@@ -15,7 +15,7 @@ class plot_splines:
 
         self.__sp.append(s)
 
-    def plot_all(self, interpolation=False, steps=100, de_boor=True, ctrl_pol=True):
+    def plot_all(self, interpolation=False, de_boor=True, ctrl_pol=True):
         """
         Calculate points on the spline at "steps" intervals and put them in a matrix.
         Plot the results.
@@ -28,7 +28,7 @@ class plot_splines:
         y_low, y_up = 0, 0
 
         for i in range(0, len(self.__sp)):
-            results = self.__sp[i].get_spline_values(steps)
+            results = self.__sp[i].get_spline_values()
             # Plots the spline
             plt.plot(results[:,0], results[:,1], label=i)
             d = self.__sp[i].get_ctrl_points()
@@ -65,14 +65,18 @@ if __name__ == '__main__':
                   [10,0], [5,0], [5,0.7], [5,0.7], [5,0],
                   [0,0], [0,1], [1.5,1.8], [5,2]]).astype(float)
     """
-    d = np.array([[0,0], [0.5, -1], [1, 2], [2, -2], [2.5, 2], [3, -2], [3.5, 1], [4,0], [5, 1], [6, -1], [7, 1], [8, -1], [9,1], [10,-1], [11, 0]])
-    #d1 = np.array([[0, 4], [0.5, 5], [1, 6], [2, 6], [3, 6], [3.5, 5], [4, 4]])
+    d = np.array([[0, 0], [0.5, 0.5], [1, 1], [2, 2], [2.5, 2.5], [3, 3], [3.5, 3.5]])
+    d1 = np.array([[-2, -1], [0.5, -4], [1, 2], [2, -6], [2.5, 4], [3, -2], [5, 1]])
 
-    s = spl.spline(d)
-    #s1 = spl.spline(d1)
+    s = spl.spline(d, steps=100)
+    s1 = spl.spline(d1, steps=100)
+
+    s2 = s + s1
+    s3 = s1 + s
 
     p = plot_splines()
-
     p.add_spline(s)
-    #p.add_spline(s1)
-    p.plot_all(steps=100)
+    p.add_spline(s1)
+    p.add_spline(s2)
+    p.add_spline(s3)
+    p.plot_all(de_boor=False, ctrl_pol=False)
