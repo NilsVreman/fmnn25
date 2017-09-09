@@ -13,6 +13,7 @@ class spline:
         """
         self.__d = d
         self.__p = p
+        self.__interpolation_points = None
 
         if xi is None:
             #Create knots vector (K=L+2)
@@ -23,6 +24,14 @@ class spline:
             self.__xi = np.hstack([xi1, xi2, xi3])
 
         else: self.__xi = xi
+
+    def __call__(self, interpolation, steps=100, de_boor=True, ctrl_pol=True):
+        if interpolation:
+            self.__d = self.interpolate()
+
+        p = ps.plot_splines()
+        p.add_spline(self)
+        p.plot_all()
 
     def __find_interval(self, u):
         """
@@ -65,7 +74,16 @@ class spline:
 
         return d_i[p]
 
-    def interpolate(self, xi, points):
+    def interpolate(self):
+        """
+        Finds control points d from already given points (interpolation points)
+        return: control points, d
+        """
+        xi = self.__xi
+        self.__interpolation_points = np.array(self.__d)
+        points = self.__d.T
+
+        #Check that we can compute the Interpolation
         if len(points[0]) < 4:
             raise valueError("Need atleast 4 points")
         if len(points[0]) != (len(xi) - 2):
@@ -74,24 +92,22 @@ class spline:
         L = len(points[0])
         NMat = np.zeros((L,L))
 
+        #Some comments about the for loop
         for i  in range(0, L):
             G_abscissae = (xi[i] + xi[i+1] + xi[i+2])/3
             for j in range(0, L):
                 N = self.__get_N_base(j, G_abscissae, xi, 3)
                 NMat[i,j] = N
 
-
         dx = sp.solve(NMat,points[0])
         dy = sp.solve(NMat,points[1])
 
+        #Transform the control points into a [nx2] matrix
+        self.__d = np.array([dx, dy]).T
+        
+        return self.__d
 
-        d = np.array([[0.0 for x in range(2)] for y in range(len(dx))])
-        for x in range(0,len(dx)):
-            d[x] = np.array([dx[x],dy[x]])
-
-        return d
-
-    def get_points(self, steps):
+    def get_spline_values(self, steps):
         """
         Calculate points on the spline at "steps" intervals and put them in a matrix.
 
@@ -104,6 +120,9 @@ class spline:
         for i in range(0, steps + 1):
             results[i, :] = self.value(i / steps)
         return results
+
+    def get_interpolation_points(self):
+        return self.__interpolation_points
 
     def get_ctrl_points(self):
         return self.__d
@@ -165,3 +184,4 @@ class spline:
         if(n == 0.0):
             return 0.0
         return t/n
+

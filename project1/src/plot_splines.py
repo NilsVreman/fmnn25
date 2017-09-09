@@ -10,12 +10,12 @@ class plot_splines:
         """
         s: spline object
         """
-        if not isinstance(s, spl.spline):
+        if not s.__class__.__name__ == 'spline':
             raise Exception('Error: Instance not spline')
 
         self.__sp.append(s)
 
-    def plot_all(self, points = None, steps=100, de_boor=True, ctrl_pol=True):
+    def plot_all(self, interpolation=False, steps=100, de_boor=True, ctrl_pol=True):
         """
         Calculate points on the spline at "steps" intervals and put them in a matrix.
         Plot the results.
@@ -28,10 +28,11 @@ class plot_splines:
         y_low, y_up = 0, 0
 
         for i in range(0, len(self.__sp)):
-            results = self.__sp[i].get_points(steps)
+            results = self.__sp[i].get_spline_values(steps)
             # Plots the spline
-            plt.plot(results[:,0], results[:,1])
+            plt.plot(results[:,0], results[:,1], label=i)
             d = self.__sp[i].get_ctrl_points()
+            interpol_points = self.__sp[i].get_interpolation_points()
 
             if de_boor:
                 # Plots control points
@@ -40,8 +41,9 @@ class plot_splines:
             if ctrl_pol:
                 # Plots control polygon
                 plt.plot(d[:,0], d[:,1])
-            if points is not None:
-                plt.plot(points[0,:], points[1,:], '+')
+
+            if interpolation and interpol_points is not None:
+                plt.plot(interpol_points[:,0], interpol_points[:,1], '+')
 
             # Sets axes to relate to the max and min control values.
             xmax, ymax = d.max(axis=0)
@@ -52,6 +54,7 @@ class plot_splines:
             y_up = ymax if ymax > y_up else y_up
 
         plt.axis([x_low-2, x_up+2, y_low-1, y_up+1])
+        plt.legend()
         plt.show()
 
 if __name__ == '__main__':

@@ -16,7 +16,7 @@ class TestSpline(unittest.TestCase):
         u_knots = sp.get_knots() # returns the knots to Calculate the base functions at
         x = 0.0
         y = 0.0
-        results = sp.get_points(1000)
+        results = sp.get_spline_values(1000)
         for u in np.linspace(u_knots[0],u_knots[-1],200):
             for i in range(0, len(u_knots)-2):
                 N_i = sp.getN_i_k(u_knots, i) # gets the N_i function
@@ -40,14 +40,13 @@ class TestSpline(unittest.TestCase):
     def test_interpolate(self):
         xi = np.linspace(0,1.,8)
         xi = np.hstack([0,0, xi, 1,1])
-        points = np.array([[0.0,2.7,3.37,8.0,10.0,13.37,15.0,16.0,18.2,21.0],[-2.0,3.0,1.0,4.0,-4.0,0.0,0.0,3.0,6.0,-2.0]])
-        sp1 = spline(points)
-        
-        d = sp1.interpolate(xi, points)
-        sp2 = spline(d, xi, 3)
+        points = np.array([[0.0,2.7,3.37,8.0,10.0,13.37,15.0,16.0,18.2,21.0],[-2.0,3.0,1.0,4.0,-4.0,0.0,0.0,3.0,6.0,-2.0]]).T
+        sp1 = spline(points, xi)
+        sp1.interpolate()
+
         psp = ps.plot_splines()
-        psp.add_spline(sp2)
-        psp.plot_all(points, de_boor=False, ctrl_pol=False)
+        psp.add_spline(sp1)
+        psp.plot_all(interpolation=True, de_boor=False, ctrl_pol=False)
 
 
     def plot_N(self):
