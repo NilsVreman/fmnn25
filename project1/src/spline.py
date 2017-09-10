@@ -27,12 +27,19 @@ class spline:
         else: self.__xi = xi
 
     def __call__(self, interpolation, de_boor=True, ctrl_pol=True):
+        """
+        Plots the spline based on the boolean interpolation. If interpolation is True: Use the control points as interpolation points and calculate the new control points such that the spline goes through the interpolation points.
+
+        interpolation:  Boolean that decides if our control points are interpolation points (True) or not (False)
+        de_boor:        Boolean that decides if we want the control points plotted or not.
+        ctrl_pol:       Boolean that decides if we want the control polygon plotted or not
+        """
         if interpolation:
             self.__d = self.interpolate()
 
         p = ps.plot_splines()
         p.add_spline(self)
-        p.plot_all()
+        p.plot_all(interpolation, de_boor, ctrl_pol)
 
     def __find_interval(self, u):
         """
@@ -49,7 +56,7 @@ class spline:
         """
         Calculate a value on the spline given the control points d and a position u (0-1)
 
-        d:  Control points {(x_i, y_i)
+        d:  Control points {(x_i, y_i)}
         u:  The point in which we want to evaluate the spline (0-1)
         p:  Degree of the spline
         return: value of spline in u
@@ -78,6 +85,7 @@ class spline:
     def interpolate(self):
         """
         Finds control points d from already given points (interpolation points)
+
         return: control points, d
         """
         xi = self.__xi
@@ -225,6 +233,8 @@ class spline:
         """
         # Create a matrix to store all result points
         results = np.zeros([self.__steps + 1, len(self.__d[0])])
+        print(self.__d)
+
         # Evaluate for each step
         for i in range(0, self.__steps + 1):
             results[i, :] = self.value(i / self.__steps)
@@ -293,4 +303,11 @@ class spline:
         if(n == 0.0):
             return 0.0
         return t/n
+
+if __name__ == '__main__':
+    d = np.array([[0,0], [1, 1], [2, -1], [3, 2], [4, -2], [5, 2], [6,-1], [7,1], [8,0]])
+    s = spline(d)
+    s(False)
+    s(True)
+    s(False)
 

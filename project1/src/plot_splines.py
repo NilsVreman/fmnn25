@@ -8,6 +8,9 @@ class plot_splines:
 
     def add_spline(self, s):
         """
+        Adds a spline object to the list of splines to be plotted.
+        Raise: Exception if s is not of instance spline
+
         s: spline object
         """
         if not s.__class__.__name__ == 'spline':
@@ -17,10 +20,10 @@ class plot_splines:
 
     def plot_all(self, interpolation=False, de_boor=True, ctrl_pol=True):
         """
-        Calculate points on the spline at "steps" intervals and put them in a matrix.
+        Calculate points on the spline and put them in a matrix.
         Plot the results.
 
-        steps: Nbr of steps/points to evaluate the spline (resolution)
+        interpolation: Boolean to plot the interpolation points (if such exists for the spline)
         de_boor: Boolean to plot the control points
         ctrl_pol: Boolean to plot the control polygon
         """
@@ -29,8 +32,10 @@ class plot_splines:
 
         for i in range(0, len(self.__sp)):
             results = self.__sp[i].get_spline_values()
+
             # Plots the spline
             plt.plot(results[:,0], results[:,1], label=i)
+
             d = self.__sp[i].get_ctrl_points()
             interpol_points = self.__sp[i].get_interpolation_points()
 
@@ -43,9 +48,10 @@ class plot_splines:
                 plt.plot(d[:,0], d[:,1])
 
             if interpolation and interpol_points is not None:
+                # Plots the interpolation points if such exists
                 plt.plot(interpol_points[:,0], interpol_points[:,1], '+')
 
-            # Sets axes to relate to the max and min control values.
+            # Updates max and min value of the plot
             xmax, ymax = d.max(axis=0)
             xmin, ymin = d.min(axis=0)
             x_low = xmin if xmin < x_low else x_low
@@ -53,6 +59,7 @@ class plot_splines:
             y_low = ymin if ymin < y_low else y_low
             y_up = ymax if ymax > y_up else y_up
 
+        # Sets axes to relate to the max and min control values and also sets a legend
         plt.axis([x_low-2, x_up+2, y_low-1, y_up+1])
         plt.legend()
         plt.show()
