@@ -11,7 +11,7 @@ class spline:
         d: The control points
         p: The spline degree
         """
-        self.__d = d
+        self.__d = d.astype(float) # OBS! need to Type cast all values in d as float because value need to be able to calculate with float
         self.__steps = steps
         self.__p = p
         self.__interpolation_points = None
@@ -35,7 +35,7 @@ class spline:
         ctrl_pol:       Boolean that decides if we want the control polygon plotted or not
         """
         if interpolation:
-            self.__d = self.interpolate()
+            self.interpolate()
 
         p = ps.plot_splines()
         p.add_spline(self)
@@ -116,7 +116,9 @@ class spline:
         
         return self.__d
 
-    def is_cyclic(self):
+    def __is_cyclic(self):
+        # Returns boolean wether spline is cyclic or not
+
         min = self.__d[0, 0]
         max = self.__d[0, 0]
         for x in self.__d[:, 0]:
@@ -126,8 +128,9 @@ class spline:
                 return True
         return False
 
-    # Find interval min and max in x of the spline
-    def get_min_max(self):
+    def __get_min_max(self):
+        # Find interval min and max in x of the spline
+
         min = self.__d[0, 0]
         max = self.__d[0, 0]
         for x in self.__d[:, 0]:
@@ -135,7 +138,7 @@ class spline:
                 max = x
         return min, max
 
-    def get_u_min_max(self, min, max):
+    def __get_u_min_max(self, min, max):
         u_min = 0
         for i in range(0, self.__steps + 1):
             if self.value(i / self.__steps)[0] >= min:
@@ -151,24 +154,26 @@ class spline:
         return u_min, u_max
 
     def __add__(self, sp2):
-        if type(sp2) is not spline:
-            raise Exception("Spline 2 is not a spline")
-        if self.is_cyclic():
-            raise Exception("Spline 1 is cyclic")
-        if sp2.is_cyclic():
-            raise Exception("Spline 2 is cyclic")
+        """
+        calculates the addition between self and spline
+
+        return: the new spline which is an addition between self and sp2
+        """
+        if not isinstance(sp2, spline): raise Exception("Spline 2 is not a spline")
+        if self.__is_cyclic(): raise Exception("Spline 1 is cyclic")
+        if sp2.__is_cyclic(): raise Exception("Spline 2 is cyclic")
 
         # Get interval in x of both splines
-        min1, max1 = self.get_min_max()
-        min2, max2 = sp2.get_min_max()
+        min1, max1 = self.__get_min_max()
+        min2, max2 = sp2.__get_min_max()
 
         # Get intersection interval of both splines
         min3 = max(min1, min2)
         max3 = min(max1, max2)
 
         # Get intersection interval of both splines in u instead of x
-        u_min3_sp1, u_max3_sp1 = self.get_u_min_max(min3, max3)
-        u_min3_sp2, u_max3_sp2 = sp2.get_u_min_max(min3, max3)
+        u_min3_sp1, u_max3_sp1 = self.__get_u_min_max(min3, max3)
+        u_min3_sp2, u_max3_sp2 = sp2.__get_u_min_max(min3, max3)
 
         # Create a vector with u values in the interval with "steps" many points
         u_vec_sp1 = None
@@ -226,14 +231,12 @@ class spline:
 
     def get_spline_values(self):
         """
-        Calculate points on the spline at "steps" intervals and put them in a matrix.
+        Calculate points on the spline at self.steps intervals and put them in a matrix.
 
-        steps: Nbr of steps/points to evaluate the spline (resolution)
         return: A vector of point tuples (x,y)
         """
         # Create a matrix to store all result points
         results = np.zeros([self.__steps + 1, len(self.__d[0])])
-        print(self.__d)
 
         # Evaluate for each step
         for i in range(0, self.__steps + 1):
@@ -241,12 +244,15 @@ class spline:
         return results
 
     def get_interpolation_points(self):
+        # Return the interpolation points
         return self.__interpolation_points
 
     def get_ctrl_points(self):
+        # Return the control points
         return self.__d
 
     def get_knots(self):
+        # Return the grid points
         return self.__xi
 
     def getN_i_k(self, xi, i):
@@ -277,18 +283,18 @@ class spline:
         """
 
         if k == 0:
-            if self.getU(xi, i - 1) == self.getU(xi, i):
+            if self.__get_U(xi, i - 1) == self.__get_U(xi, i):
                 return 0
-            elif (u >= self.getU(xi,i-1) and u < self.getU(xi, i)):
+            elif (u >= self.__get_U(xi,i-1) and u < self.__get_U(xi, i)):
                 return 1
             else:
                 return 0
         else:
-            return (self.__getMultVal(u - self.getU(xi, i-1), self.getU(xi, i + k - 1) - self.getU(xi, i-1)) * self.__get_N_base(i, u, xi, k - 1) +
-                    self.__getMultVal(self.getU(xi, i+k) - u, self.getU(xi,i+k) - self.getU(xi, i)) * self.__get_N_base(i+1, u, xi, k - 1))
+            return (self.__getMultVal(u - self.__get_U(xi, i-1), self.__get_U(xi, i + k - 1) - self.__get_U(xi, i-1)) * self.__get_N_base(i, u, xi, k - 1) +
+                    self.__getMultVal(self.__get_U(xi, i+k) - u, self.__get_U(xi,i+k) - self.__get_U(xi, i)) * self.__get_N_base(i+1, u, xi, k - 1))
 
 
-    def getU(self, xi, i):
+    def __get_U(self, xi, i):
         if i < 0:
             return 0
         elif i >= len(xi):
@@ -306,8 +312,8 @@ class spline:
 
 if __name__ == '__main__':
     d = np.array([[0,0], [1, 1], [2, -1], [3, 2], [4, -2], [5, 2], [6,-1], [7,1], [8,0]])
+    d1 = np.array([[0,0], [1, 1], [2, -1], [3, 2], [4, -2], [5, 2], [6,-1], [7,1], [8,0]])
     s = spline(d)
+    s1 = spline(d1)
     s(False)
-    s(True)
-    s(False)
-
+    s1(True)
