@@ -5,10 +5,11 @@ import matplotlib.pyplot as plt
 import plot_splines as ps
 
 class TestSpline(unittest.TestCase):
+    
     def test_s_equals_sum_dN(self):
         '''
         Test if S(u) = sum(d_i*N_i)
-        Also plots it
+        Also plots the points and the spline
         '''
         d =np.array([[0,0], [0.5, -1], [1, 2], [2, -2], [2.5, 2], [3, -2], [3.5, 1],
          [4,0], [5, 1], [6, -1], [7, 1], [8, -1], [9,1], [10,-1], [11, 0]])
@@ -34,6 +35,9 @@ class TestSpline(unittest.TestCase):
         print("\nTEST: S(u)=Sum[d_i*N_i] OK\n")
 
     def test_interpolate(self):
+        '''
+        Plots the interpolation of chosen points and the spline that interpolates
+        '''
         xi = np.linspace(0,1.,8)
         xi = np.hstack([0,0, xi, 1,1])
         points = np.array([[0.0,2.7,3.37,8.0,10.0,13.37,15.0,16.0,18.2,21.0],[-2.0,3.0,1.0,4.0,-4.0,0.0,0.0,3.0,6.0,-2.0]]).T
@@ -51,7 +55,7 @@ class TestSpline(unittest.TestCase):
         sp = spline(d, steps=100, p= 3)
         s = np.linspace(0,2,300) # Resoluton of plot
         u_knots = sp.get_knots() # returns the knots to Calculate the base functions at
-        for u in range(3, len(u_knots)-5):
+        for u in range(3, len(u_knots)-5): #Starts at 3 since u0=u1=u2
             N_i = sp.getN_i_k(u_knots,u) # gets the N_i function
             plotArray=[]
             for i in s:
@@ -80,7 +84,6 @@ class TestSpline(unittest.TestCase):
         plot = input("Show plots of N? y/n(y)")
         if(plot != "n"):
             self.plot_N()
-
 
 if __name__ == '__main__':
     unittest.main()
