@@ -74,7 +74,6 @@ class spline:
         #Find the index of the knot interval where u is located.
         #Put surrounding p+1 control points that are influencing the final value in a vector
         I, d_i = self.__find_interval(u)
-        print(d_i)
         #Evaluation
         for deg_lvl in range(0, p):
             for depth in range(p, deg_lvl, -1):
