@@ -12,11 +12,11 @@ class TestSpline(unittest.TestCase):
     def test_s_equals_sum_dN(self):
         d =np.array([[0,0], [0.5, -1], [1, 2], [2, -2], [2.5, 2], [3, -2], [3.5, 1],
          [4,0], [5, 1], [6, -1], [7, 1], [8, -1], [9,1], [10,-1], [11, 0]])
-        sp = spline(d, p= 3)
+        sp = spline(d, steps=100, p= 3)
         u_knots = sp.get_knots() # returns the knots to Calculate the base functions at
         x = 0.0
         y = 0.0
-        results = sp.get_points(1000)
+        results = sp.get_spline_values()
         for u in np.linspace(u_knots[0],u_knots[-1],200):
             for i in range(0, len(u_knots)-2):
                 N_i = sp.getN_i_k(u_knots, i) # gets the N_i function
@@ -35,25 +35,22 @@ class TestSpline(unittest.TestCase):
 
     def test_splinecalc(self):
         d = np.array([[0,0], [5,0], [5,2], [8, 3], [5,8], [0,10]]).astype(float) #Control points
-        sp = spline(d, p=3)
+        sp = spline(d, steps=100, p=3)
 
     def test_interpolate(self):
         xi = np.linspace(0,1.,8)
         xi = np.hstack([0,0, xi, 1,1])
-        
-        points = np.array([[0.0,2.7,3.37,8.0,10.0,13.37,15.0,16.0,18.2,21.0],[-2.0,3.0,1.0,4.0,-4.0,0.0,0.0,3.0,6.0,-2.0]])
-        sp1 = spline(points)
-        
-        d = sp1.interpolate(xi, points)
-        sp2 = spline(d, xi, 3)
+        points = np.array([[0.0,2.7,3.37,8.0,10.0,13.37,15.0,16.0,18.2,21.0],[-2.0,3.0,1.0,4.0,-4.0,0.0,0.0,3.0,6.0,-2.0]]).T
+        sp1 = spline(points, steps=100, xi=xi)
+        sp1.interpolate()
         psp = ps.plot_splines()
-        psp.add_spline(sp2)
-        psp.plot_all(points, de_boor=False, ctrl_pol=False)
+        psp.add_spline(sp1)
+        psp.plot_all(interpolation=True, de_boor=False, ctrl_pol=False)
 
 
     def plot_N(self):
         d = np.array([[0,0], [3,1], [4,1], [5,0], [5,2], [6,3],[8, 3], [8,4],[5,8], [0,10]]).astype(float) #Control pointss
-        sp = spline(d, p= 3)
+        sp = spline(d, steps=100, p= 3)
         s = np.linspace(0,2,300) # Resoluton of plot
         u_knots = sp.get_knots() # returns the knots to Calculate the base functions at
         for u in range(3, len(u_knots)-5):
@@ -68,7 +65,7 @@ class TestSpline(unittest.TestCase):
 
     def test_sum_of_N(self):
         d = np.array([[0,0], [3,1], [4,1], [5,0], [5,2], [6,3],[8, 3], [8,4],[5,8], [0,10]]).astype(float) #Control pointss
-        sp = spline(d, p=3)
+        sp = spline(d, steps=100, p=3)
         x=0
         u_knots = sp.get_knots() # returns the knots to Calculate the base functions at
         for u in np.linspace(u_knots[2],u_knots[len(u_knots)-2],200):
