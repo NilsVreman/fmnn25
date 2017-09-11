@@ -41,6 +41,7 @@ class spline:
         p.add_spline(self)
         p.plot_all(interpolation, de_boor, ctrl_pol)
 
+
     def __find_interval(self, u):
         """
         Finds the interval in which u is located. Returns this index and the relevant control points
@@ -73,7 +74,7 @@ class spline:
         #Find the index of the knot interval where u is located.
         #Put surrounding p+1 control points that are influencing the final value in a vector
         I, d_i = self.__find_interval(u)
-
+        print(d_i)
         #Evaluation
         for deg_lvl in range(0, p):
             for depth in range(p, deg_lvl, -1):
@@ -110,6 +111,7 @@ class spline:
 
         dx = sp.solve(NMat,points[0])
         dy = sp.solve(NMat,points[1])
+
 
         #Transform the control points into a [nx2] matrix
         self.__d = np.array([dx, dy]).T

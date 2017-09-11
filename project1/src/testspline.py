@@ -39,7 +39,6 @@ class TestSpline(unittest.TestCase):
         points = np.array([[0.0,2.7,3.37,8.0,10.0,13.37,15.0,16.0,18.2,21.0],[-2.0,3.0,1.0,4.0,-4.0,0.0,0.0,3.0,6.0,-2.0]]).T
         sp1 = spline(points, steps=100, xi=xi)
         sp1.interpolate()
-
         psp = ps.plot_splines()
         psp.add_spline(sp1)
         psp.plot_all(interpolation=True, de_boor=False, ctrl_pol=False)
