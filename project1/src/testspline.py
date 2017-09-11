@@ -5,11 +5,11 @@ import matplotlib.pyplot as plt
 import plot_splines as ps
 
 class TestSpline(unittest.TestCase):
-    '''
-    Test if S(u) = sum(d_i*N_i)
-    Also plots it
-    '''
     def test_s_equals_sum_dN(self):
+        '''
+        Test if S(u) = sum(d_i*N_i)
+        Also plots it
+        '''
         d =np.array([[0,0], [0.5, -1], [1, 2], [2, -2], [2.5, 2], [3, -2], [3.5, 1],
          [4,0], [5, 1], [6, -1], [7, 1], [8, -1], [9,1], [10,-1], [11, 0]])
         sp = spline(d, steps=100, p= 3)
@@ -33,10 +33,6 @@ class TestSpline(unittest.TestCase):
         plt.show()
         print("\nTEST: S(u)=Sum[d_i*N_i] OK\n")
 
-    def test_splinecalc(self):
-        d = np.array([[0,0], [5,0], [5,2], [8, 3], [5,8], [0,10]]).astype(float) #Control points
-        sp = spline(d, steps=100, p=3)
-
     def test_interpolate(self):
         xi = np.linspace(0,1.,8)
         xi = np.hstack([0,0, xi, 1,1])
@@ -48,8 +44,10 @@ class TestSpline(unittest.TestCase):
         psp.add_spline(sp1)
         psp.plot_all(interpolation=True, de_boor=False, ctrl_pol=False)
 
-
     def plot_N(self):
+        '''
+        Plots the basefunctions N_i
+        '''
         d = np.array([[0,0], [3,1], [4,1], [5,0], [5,2], [6,3],[8, 3], [8,4],[5,8], [0,10]]).astype(float) #Control pointss
         sp = spline(d, steps=100, p= 3)
         s = np.linspace(0,2,300) # Resoluton of plot
@@ -65,19 +63,23 @@ class TestSpline(unittest.TestCase):
         plt.show()
 
     def test_sum_of_N(self):
+        '''
+        Test if sum(N_i(u))=1
+        Also plots it
+        '''
         d = np.array([[0,0], [3,1], [4,1], [5,0], [5,2], [6,3],[8, 3], [8,4],[5,8], [0,10]]).astype(float) #Control pointss
         sp = spline(d, steps=100, p=3)
-        x=0
+        x = 0
         u_knots = sp.get_knots() # returns the knots to Calculate the base functions at
-        for u in np.linspace(u_knots[2],u_knots[len(u_knots)-2],200):
+        for u in np.linspace(u_knots[2], u_knots[len(u_knots)-2], 200):
             for i in range(0, len(u_knots)-2):
                 N_i = sp.getN_i_k(u_knots,i) # gets the N_i function
                 x+=(N_i(u))
-            self.assertEqual(round(x,10),1.0)
+            self.assertEqual(round(x,10), 1.0)
             x = 0
         print("TEST: Sum of N OK")
         plot = input("Show plots of N? y/n(y)")
-        if(plot!="n"):
+        if(plot != "n"):
             self.plot_N()
 
 
