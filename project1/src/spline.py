@@ -11,6 +11,9 @@ class spline:
         d: The control points
         p: The spline degree
         """
+        if len(d) == 2:
+            self.__deBoor = False
+            
         self.__d = d
         self.__p = p
 
@@ -23,6 +26,9 @@ class spline:
             self.__xi = np.hstack([xi1, xi2, xi3])
 
         else: self.__xi = xi
+
+    def __call__(self):
+        pass
 
     def __find_interval(self, u):
         """
@@ -56,7 +62,7 @@ class spline:
         #Find the index of the knot interval where u is located.
         #Put surrounding p+1 control points that are influencing the final value in a vector
         I, d_i = self.__find_interval(u)
-
+        print(d_i)
         #Evaluation
         for deg_lvl in range(0, p):
             for depth in range(p, deg_lvl, -1):
@@ -81,8 +87,8 @@ class spline:
                 NMat[i,j] = N
 
 
-        dx = sp.solve(NMat,points[0])
-        dy = sp.solve(NMat,points[1])
+        dx = sp.solve(NMat, points[0])
+        dy = sp.solve(NMat, points[1])
 
 
         d = np.array([[0.0 for x in range(2)] for y in range(len(dx))])

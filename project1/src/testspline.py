@@ -40,6 +40,7 @@ class TestSpline(unittest.TestCase):
     def test_interpolate(self):
         xi = np.linspace(0,1.,8)
         xi = np.hstack([0,0, xi, 1,1])
+        
         points = np.array([[0.0,2.7,3.37,8.0,10.0,13.37,15.0,16.0,18.2,21.0],[-2.0,3.0,1.0,4.0,-4.0,0.0,0.0,3.0,6.0,-2.0]])
         sp1 = spline(points)
         
