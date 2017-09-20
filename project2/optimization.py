@@ -20,8 +20,10 @@ class optimization(ABC):
         for i in range(0, nbrIters):
             pass
 
-
-    def inexact_LS_GW(self, x, s, rho, alpha_L=0, alpha_U=10**99):
+    """
+    inexact line search using Goldstein criterion
+    """
+    def inexact_LS_G(self, x, s, rho, alpha_L=0, alpha_U=10**99):
 
         rho = rho if rho <= 1/2 and rho >= 0 else 1/4
         alpha = 1
@@ -59,6 +61,9 @@ class optimization(ABC):
 
         return alpha
 
+    """
+    inexact line search using Wolfe-Powell criterion
+    """
     def inexact_LS_WP(self, x, s, rho, sigma, alpha_L=0, alpha_U=10**99):
 
         rho = rho if rho <= 1/2 and rho >= 0 else 1/4
@@ -114,7 +119,7 @@ if __name__ == '__main__':
     f = lambda x: 100*(x[0]-x[1]**2)**2+(1-x[0])**2
     g = lambda x: 2*x
     o = optimization(f, g)
-    alpha = o.inexact_LS_GW(np.array([0,0]).astype(float), np.array([1, 0]).astype(float), 0.01)
+    alpha = o.inexact_LS_G(np.array([0,0]).astype(float), np.array([1, 0]).astype(float), 0.01)
     alpha2 = o.inexact_LS_WP(np.array([0,0]).astype(float), np.array([1, 0]).astype(float), 0.01, 0.1)
     print(alpha, alpha2)
     temp = o.grad(f, np.array([1,1]))
