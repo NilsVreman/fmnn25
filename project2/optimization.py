@@ -21,6 +21,46 @@ class optimization(ABC):
             pass
 
     """
+    Exact line search using golden section
+    """
+    def exact_LS_GS(self, x, s, a, b, n):
+        """
+        x: point to start line search in
+        s: search direction
+        a: min_interval
+        b: max_interval
+        n: nbr_iterations
+        """
+        f_alpha = lambda alpha: self.__f(x+alpha*s)
+
+        alpha = (math.sqrt(5)-1)/2
+        a_k = a
+        b_k = b
+        # calculate where to put the next break point
+        lambda_k = a_k + (1 - alpha)*(b_k - a_k)
+        mu_k = a_k + alpha*(b_k-a_k)
+
+        f_lambda = f_alpha(lambda_k)
+        f_mu = f_alpha(mu_k)
+
+        for i in range(0, n):
+            if f_lambda < f_mu:
+                b_k = mu_k
+                mu_k = lambda_k
+                lambda_k = a_k + (1 - alpha)*(b_k - a_k)
+                f_mu = f_lambda
+                f_lambda = f_alpha(lambda_k)
+            else:
+                a_k = lambda_k
+                lambda_k = mu_k
+                mu_k = a_k + alpha*(b_k-a_k)
+                f_lambda = f_mu
+                f_mu = f_alpha(mu_k)
+
+        return a_k, b_k
+
+
+    """
     inexact line search using Goldstein criterion
     """
     def inexact_LS_G(self, x, s, rho, alpha_L=0, alpha_U=10**99):
@@ -126,3 +166,8 @@ if __name__ == '__main__':
     t = lambda x: x**2
     print(o.grad(t, 1))
     print(temp)
+
+    h = lambda x: np.power(x, 2)
+    opt = optimization(h)
+    a, b = opt.exact_LS_GS(1, -2, 0, 10, 10)
+    print('Golden section', (a+b)/2)
