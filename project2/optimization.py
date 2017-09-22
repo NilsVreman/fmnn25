@@ -168,7 +168,6 @@ class optimization(ABC):
 
             g[n] = ( f(x+e) - f(x-e) ) / ( 2.0 * eps)
             
-        print(g)
         return g 
     
     def hessian(self, func, point):
@@ -192,11 +191,88 @@ class optimization(ABC):
             
             G[x] = (gplus - gminus) / (2*e)
         
-        c = spl.cholesky(G)
-        print(c)
+        try:
+            c = spl.cholesky(G)
+        except spl.LinAlgError as e:
+            raise Exception("The matrix is not positive definite")
         
         return ((G + G.T) / 2)
 
+
+    def classic_Newton_method(self, func, guess, iteration, tol = 1.e-8):
+        x = guess
+        
+        while (iteration > 0):
+            g = self.right_grad(func, x)
+            G = self.hessian(func, x)
+            c, lower = spl.cho_factor(G, lower = True)
+            s = spl.cho_solve((c, lower), g)
+            x = x - s
+            if np.linalg.norm(g) < tol:
+                break
+            iteration -= 1
+        
+        return x
+    
+    def exact_Newton_method(self, func, guess, iteration, tol = 1.e-8):
+        x = guess
+        a = 0.8
+        b = 1.2
+        self.__f = func
+        
+        while (iteration > 0):
+            g = self.right_grad(func, x)
+            G = self.hessian(func, x)
+            c, lower = spl.cho_factor(G, lower = True)
+            s = spl.cho_solve((c, lower), g)
+            a, b = self.exact_LS_GS(x, s, a, b, 100)
+            alpha = (a + b) / 2
+            x = x - alpha * s
+            if np.linalg.norm(g) < tol:
+                break
+            iteration -= 1
+        
+        print(100 - iteration)
+        return x
+    
+    def inexact_Newton_method_G(self, func, guess, iteration, tol = 1.e-8):
+        x = guess
+        self.__f = func
+        
+        while (iteration > 0):
+            g = self.right_grad(func, x)
+            G = self.hessian(func, x)
+            c, lower = spl.cho_factor(G, lower = True)
+            s = spl.cho_solve((c, lower), g)
+            
+            alpha = self.inexact_LS_G(x, s, 0.1)
+            x = x - alpha * s
+            if np.linalg.norm(g) < tol:
+                break
+            iteration -= 1
+        
+        print(100 - iteration)
+        return x
+    
+    def inexact_Newton_method_WP(self, func, guess, iteration, tol = 1.e-8):
+        x = guess
+        self.__f = func
+        
+        while (iteration > 0):
+            g = self.right_grad(func, x)
+            G = self.hessian(func, x)
+            c, lower = spl.cho_factor(G, lower = True)
+            s = spl.cho_solve((c, lower), g)
+            alpha = self.inexact_LS_WP(x, s, 0.1, 0.7)
+            x = x - alpha * s
+            if np.linalg.norm(g) < tol:
+                break
+            iteration -= 1
+        
+        print(100 - iteration)
+        return x
+        
+        
 if __name__ == '__main__':
     """f = lambda x: 100*(x[0]-x[1]**2)**2+(1-x[0])**2
     g = lambda x: 2*x
@@ -214,14 +290,17 @@ if __name__ == '__main__':
     a, b = opt.exact_LS_GS(1, -2, 0, 10, 10)
     print('Golden section', (a+b)/2)"""
     
-    f2 = lambda x: x[0]**3 - 2 * x[0] * x[1] - x[1]**6
+    f2 = lambda x: x[0]**2 + x[1]**2
+    f = lambda x: 100*(x[0]-x[1]**2)**2+(1-x[0])**2
 
     op = optimization(f)
     
     point = np.zeros(2)
-    point[0] = 1.0
+    point[0] = 3.0
     point[1] = 2.0
     
-    w = op.hessian(f2, point)
-
+    w = op.inexact_Newton_method_WP(f, point, 100)
     print(w)
+    w = op.inexact_Newton_method_WP(f2, point, 100)
+    print(w)
+
