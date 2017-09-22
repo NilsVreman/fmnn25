@@ -145,30 +145,17 @@ class optimization(ABC):
         return alpha
 
     def grad(self, f, x):
-
-        if not hasattr(x, '__len__'): x = [x]
-        
-        xplus = np.array([i+10**-8 for i in x])
-        xminus = np.array([j-10**-8 for j in x])
-        g = np.divide((f(xplus)-f(xminus)), 2*10**-8)
-        
-        return g
-    
-    def right_grad(self, f, x):
-        
         eps = 1.e-8
         
         if not hasattr(x, '__len__'): x = [x]
         
         g = np.zeros(len(x))
-        
         for n in range(len(x)):
             e = np.zeros(len(x))
             e[n] = eps
 
             g[n] = ( f(x+e) - f(x-e) ) / ( 2.0 * eps)
             
-        print(g)
         return g 
     
     def hessian(self, func, point):
@@ -178,27 +165,55 @@ class optimization(ABC):
         G = np.zeros((n ,n))
         g = np.zeros(n)
         
-        g = self.right_grad(func, point)
-    
+        g = self.grad(func, point)
         
         for x in range(0, n):
     
             new_point = np.copy(point)
             new_point[x] += e
-            gplus = self.right_grad(func, new_point)
+            gplus = self.grad(func, new_point)
             new_point2 = np.copy(point)
             new_point2[x] -= e
-            gminus = self.right_grad(func, new_point2)
+            gminus = self.grad(func, new_point2)
             
             G[x] = (gplus - gminus) / (2*e)
         
-        c = spl.cholesky(G)
-        print(c)
-        
         return ((G + G.T) / 2)
 
+    #THIS SECTION CONTAINS ALL THE QUASI-NEWTON METHODS
+
+    def update_DFP(self, f, x, x_new, H):
+        delta = (x_new - x).reshape(-1, 1)
+        gamma = (self.grad(f, x_new)-self.grad(f, x)).reshape(-1, 1)
+
+        return H + np.matmul(delta, delta.T)/np.matmul(delta.T, gamma) - np.matmul(np.matmul(H, gamma), np.matmul(gamma.T,H))/np.matmul(gamma.T, np.matmul(H,gamma))
+
+    def update_BFGS(self, f, x, x_new, H):
+        delta = (x_new - x).reshape(-1, 1)
+        gamma = (self.grad(f, x_new)-self.grad(f, x)).reshape(-1, 1)
+
+        return H + (1 + np.matmul(gamma.T, np.matmul(H, gamma))/np.matmul(delta.T, gamma))*np.matmul(delta, delta.T)/np.matmul(delta.T, gamma) - (np.matmul(delta, np.matmul(gamma.T, H)) + np.matmul(H, np.matmul(gamma, delta.T)))/np.matmul(delta.T, gamma)
+
+    def update_GB(self, f, x, x_new, H):
+        delta = (x_new - x).reshape(-1, 1)
+        gamma = (self.grad(f, x_new)-self.grad(f, x)).reshape(-1, 1)
+        u = delta - np.matmul(H, gamma)
+        a = 1/np.matmul(u.T, gamma)
+
+        return H + np.matmul(a, np.matmul(u, u.T))
+
+    def update_BB(self, f, x, x_new, H):
+        pass
+        
+
+
+        
+
+
+
+
 if __name__ == '__main__':
-    """f = lambda x: 100*(x[0]-x[1]**2)**2+(1-x[0])**2
+    f = lambda x: 100*(x[0]-x[1]**2)**2+(1-x[0])**2
     g = lambda x: 2*x
     o = optimization(f, g)
     alpha = o.inexact_LS_G(np.array([0,0]).astype(float), np.array([1, 0]).astype(float), 0.01)
@@ -212,7 +227,7 @@ if __name__ == '__main__':
     h = lambda x: np.power(x, 2)
     opt = optimization(h)
     a, b = opt.exact_LS_GS(1, -2, 0, 10, 10)
-    print('Golden section', (a+b)/2)"""
+    print('Golden section', (a+b)/2)
     
     f2 = lambda x: x[0]**3 - 2 * x[0] * x[1] - x[1]**6
 
@@ -225,3 +240,7 @@ if __name__ == '__main__':
     w = op.hessian(f2, point)
 
     print(w)
+
+    A = op.update_DFP(lambda x: x[0]**2 + x[1]**2, np.array([1, 1]), np.array([0, 0]),  np.array([[2, 0], [0, 2]]))
+
+    print(A)
