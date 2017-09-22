@@ -10,17 +10,6 @@ class optimization(ABC):
         self.__f = f
         self.__gradient = g
 
-    def classical_newton(self, x0, hessian, nbrIters):
-        #FAR FROM DONE
-
-        try:
-            si = spl.cholesky(hessian)
-        except LinAlgError:
-            raise Exception('Hessian is not positive definite.')
-
-        for i in range(0, nbrIters):
-            pass
-
     """
     Exact line search using golden section
     """
@@ -233,6 +222,7 @@ class optimization(ABC):
         self.__f = func
         
         while (iteration > 0):
+            print('G ',  iteration)
             g = self.grad(func, x)
             G = self.hessian(func, x)
             c, lower = spl.cho_factor(G, lower = True)
@@ -253,6 +243,7 @@ class optimization(ABC):
         self.__f = func
         
         while (iteration > 0):
+            print('WP ', iteration)
             g = self.grad(func, x)
             G = self.hessian(func, x)
             c, lower = spl.cho_factor(G, lower = True)
