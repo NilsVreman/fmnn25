@@ -24,7 +24,7 @@ class optimization(ABC):
     """
     Exact line search using golden section
     """
-    def exact_LS_GS(self, x, s, a, b, n):
+    def exact_LS_GS(self, f, x, s, a, b, n):
         """
         x: point to start line search in
         s: search direction
@@ -32,7 +32,7 @@ class optimization(ABC):
         b: max_interval
         n: nbr_iterations
         """
-        f_alpha = lambda alpha: self.__f(x+alpha*s)
+        f_alpha = lambda alpha: f(x+alpha*s)
 
         alpha = (math.sqrt(5)-1)/2
         a_k = a
@@ -64,111 +64,92 @@ class optimization(ABC):
     """
     inexact line search using Goldstein criterion
     """
-    def inexact_LS_G(self, x, s, alpha_0, rho = 0.1, sigma = 0.7, tau = 0.1, chi = 9):
+    def inexact_LS_G(self, f, x, s, alpha_0, rho = 0.1, sigma = 0.7, tau = 0.1, chi = 9):
 
         alpha_L = 0
         alpha_U = 10**99
+
         rho = rho if rho <= 1/2 and rho >= 0 else 1/4
         alpha = alpha_0
-        f_alpha = lambda alpha: self.__f(x + alpha*s)
+
+        f_alpha = lambda alpha: f(x + alpha*s)
         f_alpha_prim_L = self.grad(f_alpha, alpha_L)[0]
         f_alpha_prim_0 = self.grad(f_alpha, alpha)[0]
+        f_alpha_L = f_alpha(alpha_L)
+        f_alpha_0 = f_alpha(alpha)
 
-        while not f_alpha(alpha) >= f_alpha(alpha_L) + (1 - rho)*(alpha - alpha_L)*f_alpha_prim_L or not f_alpha(alpha) <= f_alpha(alpha_L) + rho*(alpha - alpha_L)*f_alpha_prim_L:
-            if not f_alpha(alpha) >= f_alpha(alpha_L)+(1 - rho)*(alpha - alpha_L)*f_alpha_prim_L:
-                a_0 = (alpha - alpha_L)*f_alpha_prim_0 / (f_alpha_prim_L - f_alpha_prim_0)
+        while not f_alpha_0 >= f_alpha_L + (1 - rho)*(alpha - alpha_L)*f_alpha_prim_L or not f_alpha_0 <= f_alpha_L + rho*(alpha - alpha_L)*f_alpha_prim_L:
+            if not f_alpha_0 >= f_alpha_L+(1 - rho)*(alpha - alpha_L)*f_alpha_prim_L:
+                factor = f_alpha_prim_L - f_alpha_prim_0 
+                if factor == 0:
+                    factor = 0.00001
+                a_0 = (alpha - alpha_L)*f_alpha_prim_0 / factor
                 a_0 = max(a_0, tau*(alpha - alpha_L))
                 a_0 = min(a_0, chi*(alpha - alpha_L))
                 alpha_L = alpha
                 alpha = a_0 + alpha
             else:
                 alpha_U = min(alpha, alpha_U)
-                a_0 = (alpha - alpha_L)**2*f_alpha_prim_L/(2*(f_alpha(alpha_L) - f_alpha(alpha) + (alpha - alpha_L)*f_alpha_prim_L))
+                factor = 2*(f_alpha_L - f_alpha_0 + (alpha - alpha_L)*f_alpha_prim_L) 
+                if factor == 0:
+                    factor = 0.00001
+                a_0 = (alpha - alpha_L)**2*f_alpha_prim_L / factor
                 a_0 = max(a_0, alpha_L + tau*(alpha_U - alpha_L))
                 a_0 = min(a_0, alpha_U - tau*(alpha_U - alpha_L))
                 alpha = a_0
                  
             f_alpha_prim_L = self.grad(f_alpha, alpha_L)[0]
             f_alpha_prim_0 = self.grad(f_alpha, alpha)[0]
+            f_alpha_L = f_alpha(alpha_L)
+            f_alpha_0 = f_alpha(alpha)
 
         return alpha, f_alpha(alpha)
 
 
-        """
-        #Checks whether we are outside the feasible area (to the right)
-        while f_alpha(alpha) > f_alpha(0):
-            alpha = alpha/2
-
-        #Checks whether we are to close to origin or function is to constant
-        while f_alpha(alpha) < f_alpha(0)+max(0.01*abs(f_alpha(0)), 10^-4):
-            alpha = alpha*2
-
-        #Check for positive derivative
-        h = 10**-6*alpha
-        f_alpha_prim_L = (f_alpha(alpha_L+h) + f_alpha(alpha_L))/h
-
-        if f_alpha_prim_L > 0:
-            print('Warning! Positive derivative. Set to zero')
-            f_alpha_prim_L = 0
-
-        #Create a conditional function
-        f_cond_L = lambda alpha: f_alpha(alpha_L)+(1-rho)*(alpha - alpha_L)*f_alpha_prim_L
-        f_cond_U = lambda alpha: f_alpha(alpha_L)+rho*(alpha - alpha_L)*f_alpha_prim_L
-
-        #Check conditions
-        while f_alpha(alpha) <= f_cond_U(alpha):
-            alpha = alpha*2
-            
-        while f_alpha(alpha) >= f_cond_L(alpha):
-            alpha = alpha/2
-
-        if math.isnan(self.__f(x+alpha*s)) or self.__f(x+alpha*s) > self.__f(x):
-            print('Warning! Line search did a bad job')
-        """
-
-        return alpha
-
     """
     inexact line search using Wolfe-Powell criterion
     """
-    def inexact_LS_WP(self, x, s, rho, sigma, alpha_L=0, alpha_U=10**99):
+    def inexact_LS_WP(self, f, x, s, alpha_0, rho = 0.1, sigma = 0.7, tau = 0.1, chi = 9):
+        alpha_L = 0
+        alpha_U = 10**99
 
         rho = rho if rho <= 1/2 and rho >= 0 else 1/4
-        sigma = sigma if sigma <= 1 and sigma >= 0 and sigma > rho else rho+1/4
-        alpha = 1
-        f_alpha = lambda alpha: self.__f(x+alpha*s)
+        sigma = sigma if sigma >= rho and sigma >= 0 and sigma <= 1 else rho+1/4
+        alpha = alpha_0
 
-        #Checks whether we are outside the feasible area (to the right)
-        while f_alpha(alpha) > f_alpha(0):
-            alpha = alpha/2
+        f_alpha = lambda alpha: f(x + alpha*s)
+        f_alpha_prim_L = self.grad(f_alpha, alpha_L)[0]
+        f_alpha_prim_0 = self.grad(f_alpha, alpha)[0]
+        f_alpha_L = f_alpha(alpha_L)
+        f_alpha_0 = f_alpha(alpha)
 
-        #Checks whether we are to close to origin or function is to constant
-        while f_alpha(alpha) < f_alpha(0)+max(0.01*abs(f_alpha(0)), 10^-4):
-            alpha = alpha*2
+        while not f_alpha_prim_0 >= sigma*f_alpha_prim_L or not f_alpha_0 <= f_alpha_L + rho*(alpha - alpha_L)*f_alpha_prim_L:
+            if not f_alpha_prim_0 >= sigma*f_alpha_prim_L:
+                factor = f_alpha_prim_L - f_alpha_prim_0 
+                if factor == 0:
+                    factor = 0.00001
+                a_0 = (alpha - alpha_L)*f_alpha_prim_0 / factor
+                a_0 = max(a_0, tau*(alpha - alpha_L))
+                a_0 = min(a_0, chi*(alpha - alpha_L))
+                alpha_L = alpha
+                alpha = a_0 + alpha
+            else:
+                alpha_U = min(alpha, alpha_U)
+                factor = 2*(f_alpha_L - f_alpha_0 + (alpha - alpha_L)*f_alpha_prim_L) 
+                if factor == 0:
+                    factor = 0.00001
+                a_0 = (alpha - alpha_L)**2*f_alpha_prim_L / factor
+                a_0 = max(a_0, alpha_L + tau*(alpha_U - alpha_L))
+                a_0 = min(a_0, alpha_U - tau*(alpha_U - alpha_L))
+                alpha = a_0
+                 
+            f_alpha_prim_L = self.grad(f_alpha, alpha_L)[0]
+            f_alpha_prim_0 = self.grad(f_alpha, alpha)[0]
+            f_alpha_L = f_alpha(alpha_L)
+            f_alpha_0 = f_alpha(alpha)
 
-        #Check for positive derivative
-        h = 10**-6*alpha
-        f_alpha_prim_L = (f_alpha(alpha_L+h) - f_alpha(alpha_L))/h
+        return alpha, f_alpha(alpha)
 
-        if f_alpha_prim_L > 0:
-            print('Warning! Positive derivative. Set to zero')
-            f_alpha_prim_L = 0
-
-        #Create a conditional function
-        f_cond_L = f_alpha_prim_L*sigma
-        f_cond_U = lambda alpha: f_alpha(alpha_L)+rho*(alpha - alpha_L)*f_alpha_prim_L
-
-        #Check conditions
-        while f_alpha(alpha) <= f_cond_U(alpha):
-            alpha = alpha*2
-            
-        while (f_alpha(alpha+h) - f_alpha(alpha))/h >= f_cond_L:
-            alpha = alpha/2
-
-        if math.isnan(self.__f(x+alpha*s)) or self.__f(x+alpha*s) > self.__f(x):
-            print('Warning! Line search did a bad job')
-
-        return alpha
 
     def grad(self, f, x):
         eps = 1.e-8
@@ -203,6 +184,7 @@ class optimization(ABC):
             gminus = self.grad(func, new_point2)
             
             G[x] = (gplus - gminus) / (2*e)
+
         try:
             c = spl.cholesky(G)
         except spl.LinAlgError as e:
@@ -237,14 +219,13 @@ class optimization(ABC):
             G = self.hessian(func, x)
             c, lower = spl.cho_factor(G, lower = True)
             s = spl.cho_solve((c, lower), g)
-            a, b = self.exact_LS_GS(x, s, a, b, 100)
+            a, b = self.exact_LS_GS(func, x, s, a, b, 100)
             alpha = (a + b) / 2
             x = x - alpha * s
             if np.linalg.norm(g) < tol:
                 break
             iteration -= 1
         
-        print(100 - iteration)
         return x
     
     def inexact_Newton_method_G(self, func, guess, iteration, tol = 1.e-8):
@@ -256,14 +237,15 @@ class optimization(ABC):
             G = self.hessian(func, x)
             c, lower = spl.cho_factor(G, lower = True)
             s = spl.cho_solve((c, lower), g)
+            s = np.multiply(s, -1)
             
-            alpha, throw = self.inexact_LS_G(x, s, 3)
-            x = x - alpha * s
+            alpha, _ = self.inexact_LS_G(func, x, s, 500)
+
+            x = x + alpha * s
             if np.linalg.norm(g) < tol:
                 break
             iteration -= 1
         
-        print(100 - iteration)
         return x
     
     def inexact_Newton_method_WP(self, func, guess, iteration, tol = 1.e-8):
@@ -275,27 +257,38 @@ class optimization(ABC):
             G = self.hessian(func, x)
             c, lower = spl.cho_factor(G, lower = True)
             s = spl.cho_solve((c, lower), g)
-            alpha = self.inexact_LS_WP(x, s, 0.1, 0.7)
-            x = x - alpha * s
+            s = np.multiply(s, -1)
+
+            alpha, _ = self.inexact_LS_WP(func, x, s, 500)
+
+            x = x + alpha * s
             if np.linalg.norm(g) < tol:
                 break
             iteration -= 1
         
-        print(100 - iteration)
         return x
 
+    """
+    Updates quasi-newton matrix H by using DFP method
+    """
     def update_DFP(self, f, x, x_new, H):
         delta = (x_new - x).reshape(-1, 1)
         gamma = (self.grad(f, x_new)-self.grad(f, x)).reshape(-1, 1)
 
         return H + np.matmul(delta, delta.T)/np.matmul(delta.T, gamma) - np.matmul(np.matmul(H, gamma), np.matmul(gamma.T,H))/np.matmul(gamma.T, np.matmul(H,gamma))
 
+    """
+    Updates quasi-newton matrix H by using BFGS method
+    """
     def update_BFGS(self, f, x, x_new, H):
         delta = (x_new - x).reshape(-1, 1)
         gamma = (self.grad(f, x_new)-self.grad(f, x)).reshape(-1, 1)
 
         return H + (1 + np.matmul(gamma.T, np.matmul(H, gamma))/np.matmul(delta.T, gamma))*np.matmul(delta, delta.T)/np.matmul(delta.T, gamma) - (np.matmul(delta, np.matmul(gamma.T, H)) + np.matmul(H, np.matmul(gamma, delta.T)))/np.matmul(delta.T, gamma)
 
+    """
+    Updates quasi-newton matrix H by using good broyden method
+    """
     def update_GB(self, f, x, x_new, H):
         delta = (x_new - x).reshape(-1, 1)
         gamma = (self.grad(f, x_new)-self.grad(f, x)).reshape(-1, 1)
@@ -304,15 +297,19 @@ class optimization(ABC):
 
         return H + np.matmul(a, np.matmul(u, u.T))
 
+    """
+    Updates quasi-newton matrix H by using bad broyden method
+    """
     def update_BB(self, f, x, x_new, H):
         pass
         
 if __name__ == '__main__':
+    """
     f = lambda x: 100*(x[0]-x[1]**2)**2+(1-x[0])**2
     g = lambda x: 2*x
     o = optimization(f, g)
-    alpha = o.inexact_LS_G(np.array([0,0]).astype(float), np.array([1, 0]).astype(float), 3)
-    alpha2 = o.inexact_LS_WP(np.array([0,0]).astype(float), np.array([1, 0]).astype(float), 0.01, 0.1)
+    alpha = o.inexact_LS_G(f, np.array([0,0]).astype(float), np.array([1, 0]).astype(float), 3)
+    alpha2 = o.inexact_LS_WP(f, np.array([0,0]).astype(float), np.array([1, 0]).astype(float), 0.01, 0.1)
     print(alpha, alpha2)
     temp = o.grad(f, np.array([1,1]))
     t = lambda x: x**2
@@ -321,8 +318,9 @@ if __name__ == '__main__':
 
     h = lambda x: np.power(x, 2)
     opt = optimization(h)
-    a, b = opt.exact_LS_GS(1, -2, 0, 10, 10)
+    a, b = opt.exact_LS_GS(h, 1, -2, 0, 10, 10)
     print('Golden section', (a+b)/2)
+    """
     
     f2 = lambda x: x[0]**2 + x[1]**2
     f = lambda x: 100*(x[0]-x[1]**2)**2+(1-x[0])**2
@@ -333,12 +331,18 @@ if __name__ == '__main__':
     point[0] = 3.0
     point[1] = 2.0
     
-    w = op.inexact_Newton_method_G(f, point, 100)
-    print(w)
+    # w = op.inexact_Newton_method_WP(f, point, 100)
+    # print(w)
 
-    w = op.inexact_Newton_method_G(f2, point, 100)
-    print(w)
+    w = op.inexact_Newton_method_G(f2, np.array([1, 1]), 100)
+    w2 = op.inexact_Newton_method_WP(f2, np.array([1, 1]), 100)
+    print('Quadratic funtion: ', w, ' --- ', w2)
 
+    x0 = np.array([1, 1])
+    rosenbrock2 = op.inexact_Newton_method_WP(f, x0, 100)
+    rosenbrock1 = op.inexact_Newton_method_G(f, x0, 100)
+
+    print('Important result: ', rosenbrock1, ' --- ', rosenbrock2)
 
 
     A = op.update_DFP(lambda x: x[0]**2 + x[1]**2, np.array([1, 1]), np.array([0, 0]),  np.array([[2, 0], [0, 2]]))
