@@ -64,12 +64,37 @@ class optimization(ABC):
     """
     inexact line search using Goldstein criterion
     """
-    def inexact_LS_G(self, x, s, rho, alpha_L=0, alpha_U=10**99):
+    def inexact_LS_G(self, x, s, alpha_0, rho = 0.1, sigma = 0.7, tau = 0.1, chi = 9):
 
+        alpha_L = 0
+        alpha_U = 10**99
         rho = rho if rho <= 1/2 and rho >= 0 else 1/4
-        alpha = 1
-        f_alpha = lambda alpha: self.__f(x+alpha*s)
+        alpha = alpha_0
+        f_alpha = lambda alpha: self.__f(x + alpha*s)
+        f_alpha_prim_L = self.grad(f_alpha, alpha_L)[0]
+        f_alpha_prim_0 = self.grad(f_alpha, alpha)[0]
 
+        while not f_alpha(alpha) >= f_alpha(alpha_L) + (1 - rho)*(alpha - alpha_L)*f_alpha_prim_L or not f_alpha(alpha) <= f_alpha(alpha_L) + rho*(alpha - alpha_L)*f_alpha_prim_L:
+            if not f_alpha(alpha) >= f_alpha(alpha_L)+(1 - rho)*(alpha - alpha_L)*f_alpha_prim_L:
+                a_0 = (alpha - alpha_L)*f_alpha_prim_0 / (f_alpha_prim_L - f_alpha_prim_0)
+                a_0 = max(a_0, tau*(alpha - alpha_L))
+                a_0 = min(a_0, chi*(alpha - alpha_L))
+                alpha_L = alpha
+                alpha = a_0 + alpha
+            else:
+                alpha_U = min(alpha, alpha_U)
+                a_0 = (alpha - alpha_L)**2*f_alpha_prim_L/(2*(f_alpha(alpha_L) - f_alpha(alpha) + (alpha - alpha_L)*f_alpha_prim_L))
+                a_0 = max(a_0, alpha_L + tau*(alpha_U - alpha_L))
+                a_0 = min(a_0, alpha_U - tau*(alpha_U - alpha_L))
+                alpha = a_0
+                 
+            f_alpha_prim_L = self.grad(f_alpha, alpha_L)[0]
+            f_alpha_prim_0 = self.grad(f_alpha, alpha)[0]
+
+        return alpha, f_alpha(alpha)
+
+
+        """
         #Checks whether we are outside the feasible area (to the right)
         while f_alpha(alpha) > f_alpha(0):
             alpha = alpha/2
@@ -99,6 +124,7 @@ class optimization(ABC):
 
         if math.isnan(self.__f(x+alpha*s)) or self.__f(x+alpha*s) > self.__f(x):
             print('Warning! Line search did a bad job')
+        """
 
         return alpha
 
@@ -189,7 +215,7 @@ class optimization(ABC):
         x = guess
         
         while (iteration > 0):
-            g = self.right_grad(func, x)
+            g = self.grad(func, x)
             G = self.hessian(func, x)
             c, lower = spl.cho_factor(G, lower = True)
             s = spl.cho_solve((c, lower), g)
@@ -207,7 +233,7 @@ class optimization(ABC):
         self.__f = func
         
         while (iteration > 0):
-            g = self.right_grad(func, x)
+            g = self.grad(func, x)
             G = self.hessian(func, x)
             c, lower = spl.cho_factor(G, lower = True)
             s = spl.cho_solve((c, lower), g)
@@ -226,12 +252,12 @@ class optimization(ABC):
         self.__f = func
         
         while (iteration > 0):
-            g = self.right_grad(func, x)
+            g = self.grad(func, x)
             G = self.hessian(func, x)
             c, lower = spl.cho_factor(G, lower = True)
             s = spl.cho_solve((c, lower), g)
             
-            alpha = self.inexact_LS_G(x, s, 0.1)
+            alpha, throw = self.inexact_LS_G(x, s, 3)
             x = x - alpha * s
             if np.linalg.norm(g) < tol:
                 break
@@ -245,7 +271,7 @@ class optimization(ABC):
         self.__f = func
         
         while (iteration > 0):
-            g = self.right_grad(func, x)
+            g = self.grad(func, x)
             G = self.hessian(func, x)
             c, lower = spl.cho_factor(G, lower = True)
             s = spl.cho_solve((c, lower), g)
@@ -285,7 +311,7 @@ if __name__ == '__main__':
     f = lambda x: 100*(x[0]-x[1]**2)**2+(1-x[0])**2
     g = lambda x: 2*x
     o = optimization(f, g)
-    alpha = o.inexact_LS_G(np.array([0,0]).astype(float), np.array([1, 0]).astype(float), 0.01)
+    alpha = o.inexact_LS_G(np.array([0,0]).astype(float), np.array([1, 0]).astype(float), 3)
     alpha2 = o.inexact_LS_WP(np.array([0,0]).astype(float), np.array([1, 0]).astype(float), 0.01, 0.1)
     print(alpha, alpha2)
     temp = o.grad(f, np.array([1,1]))
@@ -307,10 +333,10 @@ if __name__ == '__main__':
     point[0] = 3.0
     point[1] = 2.0
     
-    w = op.inexact_Newton_method_WP(f, point, 100)
+    w = op.inexact_Newton_method_G(f, point, 100)
     print(w)
 
-    w = op.inexact_Newton_method_WP(f2, point, 100)
+    w = op.inexact_Newton_method_G(f2, point, 100)
     print(w)
 
 
