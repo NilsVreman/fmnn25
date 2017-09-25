@@ -49,56 +49,7 @@ class optimization(ABC):
 
         return a_k, b_k
 
-
-    """
-    inexact line search using Goldstein criterion
-    """
-    def inexact_LS_G(self, f, x, s, alpha_0, rho = 0.1, sigma = 0.7, tau = 0.1, chi = 9):
-
-        alpha_L = 0
-        alpha_U = 10**99
-
-        rho = rho if rho <= 1/2 and rho >= 0 else 1/4
-        alpha = alpha_0
-
-        f_alpha = lambda alpha: f(x + alpha*s)
-        f_alpha_prim_L = self.grad(f_alpha, alpha_L)[0]
-        f_alpha_prim_0 = self.grad(f_alpha, alpha)[0]
-        f_alpha_L = f_alpha(alpha_L)
-        f_alpha_0 = f_alpha(alpha)
-
-        while not f_alpha_0 >= f_alpha_L + (1 - rho)*(alpha - alpha_L)*f_alpha_prim_L or not f_alpha_0 <= f_alpha_L + rho*(alpha - alpha_L)*f_alpha_prim_L:
-            if not f_alpha_0 >= f_alpha_L+(1 - rho)*(alpha - alpha_L)*f_alpha_prim_L:
-                factor = f_alpha_prim_L - f_alpha_prim_0 
-                if factor == 0:
-                    factor = 0.00001
-                a_0 = (alpha - alpha_L)*f_alpha_prim_0 / factor
-                a_0 = max(a_0, tau*(alpha - alpha_L))
-                a_0 = min(a_0, chi*(alpha - alpha_L))
-                alpha_L = alpha
-                alpha = a_0 + alpha
-            else:
-                alpha_U = min(alpha, alpha_U)
-                factor = 2*(f_alpha_L - f_alpha_0 + (alpha - alpha_L)*f_alpha_prim_L) 
-                if factor == 0:
-                    factor = 0.00001
-                a_0 = (alpha - alpha_L)**2*f_alpha_prim_L / factor
-                a_0 = max(a_0, alpha_L + tau*(alpha_U - alpha_L))
-                a_0 = min(a_0, alpha_U - tau*(alpha_U - alpha_L))
-                alpha = a_0
-                 
-            f_alpha_prim_L = self.grad(f_alpha, alpha_L)[0]
-            f_alpha_prim_0 = self.grad(f_alpha, alpha)[0]
-            f_alpha_L = f_alpha(alpha_L)
-            f_alpha_0 = f_alpha(alpha)
-
-        return alpha, f_alpha(alpha)
-
-
-    """
-    inexact line search using Wolfe-Powell criterion
-    """
-    def inexact_LS_WP(self, f, x, s, alpha_0, rho = 0.1, sigma = 0.7, tau = 0.1, chi = 9):
+    def inexact_LS(self, f, x, s, alpha_0, condition, rho = 0.1, sigma = 0.7, tau = 0.1, chi = 9):
         alpha_L = 0
         alpha_U = 10**99
 
@@ -111,9 +62,11 @@ class optimization(ABC):
         f_alpha_prim_0 = self.grad(f_alpha, alpha)[0]
         f_alpha_L = f_alpha(alpha_L)
         f_alpha_0 = f_alpha(alpha)
-
-        while not f_alpha_prim_0 >= sigma*f_alpha_prim_L or not f_alpha_0 <= f_alpha_L + rho*(alpha - alpha_L)*f_alpha_prim_L:
-            if not f_alpha_prim_0 >= sigma*f_alpha_prim_L:
+        
+        LC, RC = self.__inexact_LS_G(f_alpha_prim_0, f_alpha_prim_L, f_alpha_0, f_alpha_L, alpha, alpha_L, rho, sigma) if condition == 'G' else self.__inexact_LS_WP(f_alpha_prim_0, f_alpha_prim_L, f_alpha_0, f_alpha_L, alpha, alpha_L, rho, sigma)  
+        
+        while not LC or not RC:
+            if not LC:
                 factor = f_alpha_prim_L - f_alpha_prim_0 
                 if factor == 0:
                     factor = 0.00001
@@ -131,13 +84,30 @@ class optimization(ABC):
                 a_0 = max(a_0, alpha_L + tau*(alpha_U - alpha_L))
                 a_0 = min(a_0, alpha_U - tau*(alpha_U - alpha_L))
                 alpha = a_0
-                 
+        
             f_alpha_prim_L = self.grad(f_alpha, alpha_L)[0]
             f_alpha_prim_0 = self.grad(f_alpha, alpha)[0]
             f_alpha_L = f_alpha(alpha_L)
             f_alpha_0 = f_alpha(alpha)
+            
+            LC, RC = self.__inexact_LS_G(f_alpha_prim_0, f_alpha_prim_L, f_alpha_0, f_alpha_L, alpha, alpha_L, rho, sigma) if condition == 'G' else self.__inexact_LS_WP(f_alpha_prim_0, f_alpha_prim_L, f_alpha_0, f_alpha_L, alpha, alpha_L, rho, sigma)  
 
         return alpha, f_alpha(alpha)
+
+    """
+    inexact line search using Goldstein criterion
+    """
+    def __inexact_LS_G(self, f_alpha_prim_0, f_alpha_prim_L, f_alpha_0, f_alpha_L, alpha, alpha_L, rho, sigma):
+        return f_alpha_0 >= f_alpha_L + (1 - rho)*(alpha - alpha_L)*f_alpha_prim_L, f_alpha_0 <= f_alpha_L + rho*(alpha - alpha_L)*f_alpha_prim_L
+
+
+    """
+    inexact line search using Wolfe-Powell criterion
+    """
+    def __inexact_LS_WP(self, f_alpha_prim_0, f_alpha_prim_L, f_alpha_0, f_alpha_L, alpha, alpha_L, rho, sigma):
+        return f_alpha_prim_0 >= sigma*f_alpha_prim_L, f_alpha_0 <= f_alpha_L + rho*(alpha - alpha_L)*f_alpha_prim_L
+             
+
 
 
     def grad(self, f, x):
@@ -174,12 +144,13 @@ class optimization(ABC):
             
             G[x] = (gplus - gminus) / (2*e)
 
+        G = ( (G + G.T) / 2 )
         try:
             c = spl.cholesky(G)
         except spl.LinAlgError as e:
             raise Exception("The matrix is not positive definite")
         
-        return ((G + G.T) / 2)
+        return G
 
 
     def classic_Newton_method(self, func, guess, iteration, tol = 1.e-8):
@@ -229,7 +200,7 @@ class optimization(ABC):
             s = spl.cho_solve((c, lower), g)
             s = np.multiply(s, -1)
             
-            alpha, _ = self.inexact_LS_G(func, x, s, 500)
+            alpha, _ = self.inexact_LS(func, x, s, 500, 'G')
 
             x = x + alpha * s
             if np.linalg.norm(g) < tol:
@@ -250,7 +221,7 @@ class optimization(ABC):
             s = spl.cho_solve((c, lower), g)
             s = np.multiply(s, -1)
 
-            alpha, _ = self.inexact_LS_WP(func, x, s, 500)
+            alpha, _ = self.inexact_LS(func, x, s, 500, 'WP')
 
             x = x + alpha * s
             if np.linalg.norm(g) < tol:
