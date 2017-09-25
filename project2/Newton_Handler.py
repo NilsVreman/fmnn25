@@ -5,7 +5,7 @@ import scipy.linalg as spl
 
 class Newton_Handler(Opt_Handler, ABC):
     def optimize(self, f, guess, iteration, tol = 1.e-6):
-        x = guess
+        x = guess.astype(float)
 
         while (iteration > 0):
             g = self.grad(f, x)
