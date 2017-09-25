@@ -11,11 +11,13 @@ if __name__ == '__main__':
     inexact_newton_g = Inexact_Newton_G()
     inexact_newton_wp = Inexact_Newton_WP()
 
+    x0 = np.array([1,1])
+
     print("Classic Newton:")
-    print("\tAnswer:", classic_newton.optimize(f, np.array([1, 1]), 100))
+    print("\tAnswer:", classic_newton.optimize(f, x0, 100))
     print("\nExact Newton:")
-    print("\tAnswer:", exact_newton.optimize(f, np.array([1, 1]), 100))
+    print("\tAnswer:", exact_newton.optimize(f, x0, 100))
     print("\nInexact Newton G:")
-    print("\tAnswer:", inexact_newton_g.optimize(f, np.array([1, 1]), 100))
+    print("\tAnswer:", inexact_newton_g.optimize(f, x0, 100))
     print("\nInexact Newton WP:")
-    print("\tAnswer:", inexact_newton_wp.optimize(f, np.array([1, 1]), 100))
+    print("\tAnswer:", inexact_newton_wp.optimize(f, x0, 100))

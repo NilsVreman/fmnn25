@@ -4,16 +4,19 @@ import numpy as np
 import scipy.linalg as spl
 
 class Newton_Handler(Opt_Handler, ABC):
-    def optimize(self, f, guess, iterations, tol=1.e-6):
-        x = guess.astype(float)
+    def optimize(self, f, x0, iterations, tol=1.e-6):
+        x = x0.astype(float)
 
-        for i in range(0, iterations):
-            g = self.grad(f, x)
-            G = self.hessian(f, x)
+        g = self.grad(f, x)
+        G = self.hessian(f, x)
+        for i in range(1, iterations+1):
             c, lower = spl.cho_factor(G, lower = True)
             s = spl.cho_solve((c, lower), g)
             s = np.multiply(s, -1)
             x = x + self.alpha(f, x, s) * s
+            g = self.grad(f, x)
+            G = self.hessian(f, x)
+            print("\tg, norm(g):", g, np.linalg.norm(g))
             if np.linalg.norm(g) < tol:
                 break
 
@@ -25,7 +28,7 @@ class Newton_Handler(Opt_Handler, ABC):
 
 class Classic_Newton(Newton_Handler):
     def alpha(self, f, x, s):
-        return 1
+        return 1.0
 
 class Exact_Newton(Newton_Handler):
     def alpha(self, f, x, s):
