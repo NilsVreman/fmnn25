@@ -2,7 +2,9 @@ from Newton_Handler import Classic_Newton, Exact_Newton, Inexact_Newton_G, Inexa
 import numpy as np
 
 if __name__ == '__main__':
-    f = lambda x: x[0]**2 + x[1]**2 #lambda x: 100 * (x[0] - x[1] ** 2) ** 2 + (1 - x[0]) ** 2
+
+    f = lambda x: x[0] ** 2 + x[1] ** 2
+    #f = lambda x: 100 * (x[0] - x[1] ** 2) ** 2 + (1 - x[0]) ** 2
 
     classic_newton = Classic_Newton()
     exact_newton = Exact_Newton()
@@ -10,10 +12,10 @@ if __name__ == '__main__':
     inexact_newton_wp = Inexact_Newton_WP()
 
     print("Classic Newton:")
-    print("Answer:", classic_newton.optimize(f, np.array([1, 1]), 100))
+    print("\tAnswer:", classic_newton.optimize(f, np.array([1, 1]), 100))
     print("\nExact Newton:")
-    print("Answer:", exact_newton.optimize(f, np.array([1, 1]), 100))
+    print("\tAnswer:", exact_newton.optimize(f, np.array([1, 1]), 100))
     print("\nInexact Newton G:")
-    print("Answer:", inexact_newton_g.optimize(f, np.array([1, 1]), 100))
+    print("\tAnswer:", inexact_newton_g.optimize(f, np.array([1, 1]), 100))
     print("\nInexact Newton WP:")
-    print("Answer:", inexact_newton_wp.optimize(f, np.array([1, 1]), 100))
+    print("\tAnswer:", inexact_newton_wp.optimize(f, np.array([1, 1]), 100))

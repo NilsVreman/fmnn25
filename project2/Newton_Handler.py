@@ -4,23 +4,20 @@ import numpy as np
 import scipy.linalg as spl
 
 class Newton_Handler(Opt_Handler, ABC):
-    def optimize(self, f, guess, iteration, tol = 1.e-6):
+    def optimize(self, f, guess, iterations, tol=1.e-6):
         x = guess.astype(float)
 
-        while (iteration > 0):
+        for i in range(0, iterations):
             g = self.grad(f, x)
             G = self.hessian(f, x)
-            if iteration == 100:
-                print("Hessian:\n", G)
             c, lower = spl.cho_factor(G, lower = True)
             s = spl.cho_solve((c, lower), g)
             s = np.multiply(s, -1)
             x = x + self.alpha(f, x, s) * s
             if np.linalg.norm(g) < tol:
                 break
-            iteration -= 1
 
-        print("Iterations:", 100-iteration)
+        print("\tIterations:", i)
         return x
 
     @abstractmethod
