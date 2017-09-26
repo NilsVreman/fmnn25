@@ -251,9 +251,9 @@ class optimization(ABC):
     """
     Updates quasi-newton matrix H by using good broyden method
     """
-    def update_GB(self, f, x, x_new, H):
+    def update_BB(self, f, x, x_new, H):
         delta = (x_new - x).reshape(-1, 1)
-        gamma = (self.grad(f, x_new)-self.grad(f, x)).reshape(-1, 1)
+        gamma = (self.grad(f, x_new) - self.grad(f, x)).reshape(-1, 1)
         u = delta - np.matmul(H, gamma)
         a = 1/np.matmul(u.T, gamma)
 
@@ -262,9 +262,13 @@ class optimization(ABC):
     """
     Updates quasi-newton matrix H by using bad broyden method
     """
-    def update_BB(self, f, x, x_new, H):
-        pass
+    def update_GB(self, f, x, x_new, H):
+        delta = (x_new - x).reshape(-1, 1)
+        gamma = (x_new - np.matmul(H, x)).reshape(-1, 1)
+
+        return H + np.matmul(gamma, delta.T)/np.matmul(delta.T, delta)
         
+
 if __name__ == '__main__':
     """
     f = lambda x: 100*(x[0]-x[1]**2)**2+(1-x[0])**2
