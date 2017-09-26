@@ -2,15 +2,19 @@ from abc import ABC, abstractmethod
 from Opt_Handler import Opt_Handler
 import numpy as np
 import scipy.linalg as spl
+from chebyquad_problem import chebyquad, gradchebyquad
+import scipy.optimize as so
 
 class Quasi_Newton_Handler(Opt_Handler, ABC):
 
-    def optimize(self, f, x0, iterations, tol=1.e-6):
+    def optimize(self, f, x0, iterations, tol=1.e-6, grad=None):
+        if grad is not None:
+            self.grad = grad
 
         x = x0.astype(float)
         x_old = x
 
-        g = self.grad(f, x)
+        g = self.grad(x,f)
         H = np.eye(len(g))
 
         for i in range(1, iterations+1):
@@ -23,7 +27,7 @@ class Quasi_Newton_Handler(Opt_Handler, ABC):
             x = x + alpha * s
 
             #Update variables
-            g = self.grad(f, x)
+            g = self.grad(x,f)
             #WARNINGS SUPPRESSED IF DIVISION BY ZERO OR NAN
             np.seterr(divide='ignore', invalid='ignore')
             H = self.update(f, x_old, x, H)
@@ -47,7 +51,7 @@ class BFGS(Quasi_Newton_Handler):
     def update(self, f, x, x_new, H):
 
         delta = (x_new - x)
-        gamma = (self.grad(f, x_new)-self.grad(f, x))
+        gamma = (self.grad(x_new,f)-self.grad(x,f))
         dTg = delta@gamma
 
         return H + (1 + gamma@H@gamma/dTg)*(np.outer(delta,delta)/dTg) - (np.outer(delta,gamma)@H + H@np.outer(gamma,delta))/dTg
@@ -55,15 +59,15 @@ class BFGS(Quasi_Newton_Handler):
 class DFP(Quasi_Newton_Handler):
     def update(self, f, x, x_new, H):
         delta = (x_new - x)#.reshape(-1, 1)
-        gamma = (self.grad(f, x_new)-self.grad(f, x))#.reshape(-1, 1)
+        gamma = (self.grad(x_new,f)-self.grad(x,f))#.reshape(-1, 1)
 
-        return H + (np.outer(delta,delta)/(delta@gamma)) - (H@np.outer(gamma,gamma)@H)/(gamma@H@gamma)        
+        return H + (np.outer(delta,delta)/(delta@gamma)) - (H@np.outer(gamma,gamma)@H)/(gamma@H@gamma)
 
 class Good_Broyden(Quasi_Newton_Handler):
     def update(self, f, x, x_new, H):
 
         delta = (x_new - x)
-        gamma = (self.grad(f, x_new) - self.grad(f, x))
+        gamma = (self.grad(x_new,f) - self.grad(x,f))
 
         u = delta - (H@gamma)
         a = 1/(np.dot(u,gamma))
@@ -72,7 +76,7 @@ class Good_Broyden(Quasi_Newton_Handler):
 class Bad_Broyden(Quasi_Newton_Handler):
     def update(self, f, x, x_new, H):
         delta = (x_new - x)
-        gamma = (self.grad(f, x_new) - self.grad(f, x))
+        gamma = (self.grad(x_new,f) - self.grad(x,f))
 
         try:
             c, lower = spl.cho_factor(H, lower=True)
@@ -90,26 +94,3 @@ class Bad_Broyden(Quasi_Newton_Handler):
             raise Exception('Warning! Positive definite matrix')
 
         return H
-
-
-
-if __name__ == '__main__':
-
-    f = lambda x: x[0] ** 2 + x[1] ** 2 + 1
-    #f = lambda x: 100 * (x[1] - x[0] ** 2) ** 2 + (1 - x[0]) ** 2
-
-    bfgs = BFGS()
-    dfp = DFP()
-    bb = Bad_Broyden()
-    gb = Good_Broyden()
-
-    x0 = np.array([2, 2])
-
-    print("BFGS:")
-    print("\tAnswer:", bfgs.optimize(f, x0, 100))
-    print("\nDFP:")
-    print("\tAnswer:", dfp.optimize(f, x0, 100))
-    print("\nGood_Broyden:")
-    print("\tAnswer:", gb.optimize(f, x0, 100))
-    print("\nBad_Broyden:")
-    print("\tAnswer:", bb.optimize(f, x0, 100))

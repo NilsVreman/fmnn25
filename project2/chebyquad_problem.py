@@ -71,7 +71,7 @@ def chebyquad(x):
     chq = chebyquad_fcn(x)
     return dot(chq, chq)
 
-def gradchebyquad(f,x):
+def gradchebyquad(x,f=None):
     """
     Evaluation of the gradient function of chebyquad
     """

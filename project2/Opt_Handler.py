@@ -9,13 +9,7 @@ class Opt_Handler(ABC):
     def optimize(self):
         pass
 
-    def __init__(self, grad=None):
-        if grad is None:
-            self.grad= self.__grad
-        else:
-            self.grad = grad
-
-    def __grad(self, f, x):
+    def grad(self, x, f=None):
         eps = 1.e-8
 
         if not hasattr(x, '__len__'): x = [x]
@@ -29,22 +23,19 @@ class Opt_Handler(ABC):
 
         return g
 
-    def hessian(self, func, point):
+    def hessian(self, f, point):
 
         e = 1.e-5
         n = len(point)
         G = np.zeros((n, n))
-        g = np.zeros(n)
-
-        g = self.grad(func, point)
 
         for x in range(0, n):
             new_point = np.copy(point)
             new_point[x] += e
-            gplus = self.grad(func, new_point)
+            gplus = self.grad(new_point, f)
             new_point2 = np.copy(point)
             new_point2[x] -= e
-            gminus = self.grad(func, new_point2)
+            gminus = self.grad(new_point2, f)
 
             G[x] = (gplus - gminus) / (2 * e)
 
@@ -101,8 +92,8 @@ class Opt_Handler(ABC):
         alpha = alpha_0
 
         f_alpha = lambda alpha: f(x + alpha * s)
-        f_alpha_prim_L = self.grad(f_alpha, alpha_L)[0]
-        f_alpha_prim_0 = self.grad(f_alpha, alpha)[0]
+        f_alpha_prim_L = self.grad(alpha_L, f_alpha)[0]
+        f_alpha_prim_0 = self.grad(alpha, f_alpha)[0]
         f_alpha_L = f_alpha(alpha_L)
         f_alpha_0 = f_alpha(alpha)
 
@@ -134,8 +125,8 @@ class Opt_Handler(ABC):
                 a_0 = min(a_0, alpha_U - tau * (alpha_U - alpha_L))
                 alpha = a_0
 
-            f_alpha_prim_L = self.grad(f_alpha, alpha_L)[0]
-            f_alpha_prim_0 = self.grad(f_alpha, alpha)[0]
+            f_alpha_prim_L = self.grad(alpha_L, f_alpha)[0]
+            f_alpha_prim_0 = self.grad(alpha, f_alpha)[0]
             f_alpha_L = f_alpha(alpha_L)
             f_alpha_0 = f_alpha(alpha)
 

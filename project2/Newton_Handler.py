@@ -10,14 +10,14 @@ class Newton_Handler(Opt_Handler, ABC):
 
         x = x0.astype(float)
 
-        g = self.grad(f, x)
+        g = self.grad(x,f)
         G = self.hessian(f, x)
         for i in range(1, iterations+1):
             c, lower = spl.cho_factor(G, lower = True)
             s = spl.cho_solve((c, lower), g)
             s = np.multiply(s, -1)
             x = x + self.alpha(f, x, s) * s
-            g = self.grad(f, x)
+            g = self.grad(x,f)
             G = self.hessian(f, x)
             # print("\tg, norm(g):", g, np.linalg.norm(g))
             if np.linalg.norm(g) < tol:
