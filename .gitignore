@@ -1,2 +1,2 @@
 .DS_Store
-project1/src/__pycache__/*
+__pycache__
