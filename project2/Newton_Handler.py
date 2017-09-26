@@ -3,6 +3,9 @@ from Opt_Handler import Opt_Handler
 import numpy as np
 import scipy.linalg as spl
 
+"""
+Participants: Anton Göransson, Carl Nilsson, Alexander Arcombe, Nils Vreman
+"""
 class Newton_Handler(Opt_Handler, ABC):
     def optimize(self, f, x0, iterations, grad=None, tol=1.e-6):
         if grad is not None:

@@ -7,6 +7,9 @@ from Quasi_Newton_Handler import BFGS, DFP, Good_Broyden, Bad_Broyden
 from chebyquad_problem import chebyquad, gradchebyquad, gradchebyquad
 from numpy.testing import assert_allclose
 
+"""
+Participants: Anton Göransson, Carl Nilsson, Alexander Arcombe, Nils Vreman
+"""
 class TestOpt(unittest.TestCase):
 
     def setUp(self):
@@ -71,6 +74,14 @@ class TestOpt(unittest.TestCase):
         '''
         x0 = np.linspace(0,1,11)
         self.cheby_cases(x0, 0.6)
+
+    def test_bfgs_matrix_vs_hessian(self):
+        bfgs = BFGS()
+        f = lambda x: 100 * (x[1] - x[0] ** 2) ** 2 + (1 - x[0]) ** 2
+        x0 = np.array([1.01, 0.901])
+        bfgs.optimize(f, x0, 100, printH=True)
+        print("\nHessian is:\n")
+        print(bfgs.hessian(f, x0))
 
 if __name__ == '__main__':
     unittest.main()

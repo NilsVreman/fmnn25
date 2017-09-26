@@ -3,6 +3,9 @@ import math as math
 import numpy as np
 import scipy.linalg as spl
 
+"""
+Participants: Anton Göransson, Carl Nilsson, Alexander Arcombe, Nils Vreman
+"""
 class Opt_Handler(ABC):
 
     @abstractmethod

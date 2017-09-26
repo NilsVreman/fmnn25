@@ -5,9 +5,12 @@ import scipy.linalg as spl
 from chebyquad_problem import chebyquad, gradchebyquad
 import scipy.optimize as so
 
+"""
+Participants: Anton Göransson, Carl Nilsson, Alexander Arcombe, Nils Vreman
+"""
 class Quasi_Newton_Handler(Opt_Handler, ABC):
 
-    def optimize(self, f, x0, iterations, tol=1.e-6, grad=None):
+    def optimize(self, f, x0, iterations, tol=1.e-6, grad=None, printH=False):
         if grad is not None:
             self.grad = grad
 
@@ -32,6 +35,9 @@ class Quasi_Newton_Handler(Opt_Handler, ABC):
             np.seterr(divide='ignore', invalid='ignore')
             H = self.update(f, x_old, x, H)
             x_old = x
+
+            if printH:
+                print("H_" + str(i) + ":\n", H, "\n")
 
             #print("g, norm(g):", g, '\n', np.linalg.norm(g))
             if np.linalg.norm(g) < tol:

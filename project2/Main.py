@@ -4,6 +4,9 @@ import numpy as np
 from chebyquad_problem import chebyquad, gradchebyquad, gradchebyquad1
 import scipy.optimize as so
 
+"""
+Participants: Anton Göransson, Carl Nilsson, Alexander Arcombe, Nils Vreman
+"""
 if __name__ == '__main__':
 
     # f = lambda x: x[0] ** 2 + x[1] ** 2
