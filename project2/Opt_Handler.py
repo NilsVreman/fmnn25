@@ -116,7 +116,8 @@ class Opt_Handler(ABC):
             if not LC:
                 factor = f_alpha_prim_L - f_alpha_prim_0
                 if factor == 0:
-                    factor = 0.00001
+                    #print('WARNING! DIVISION BY ZERO IN LINESEARCH')
+                    return alpha, f_alpha(alpha)
                 a_0 = (alpha - alpha_L) * f_alpha_prim_0 / factor
                 a_0 = max(a_0, tau * (alpha - alpha_L))
                 a_0 = min(a_0, chi * (alpha - alpha_L))
@@ -126,7 +127,8 @@ class Opt_Handler(ABC):
                 alpha_U = min(alpha, alpha_U)
                 factor = 2 * (f_alpha_L - f_alpha_0 + (alpha - alpha_L) * f_alpha_prim_L)
                 if factor == 0:
-                    factor = 0.00001
+                    #print('WARNING! DIVISION BY ZERO IN LINESEARCH')
+                    return alpha, f_alpha(alpha)
                 a_0 = (alpha - alpha_L) ** 2 * f_alpha_prim_L / factor
                 a_0 = max(a_0, alpha_L + tau * (alpha_U - alpha_L))
                 a_0 = min(a_0, alpha_U - tau * (alpha_U - alpha_L))
