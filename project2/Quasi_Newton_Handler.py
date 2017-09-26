@@ -16,10 +16,10 @@ class Quasi_Newton_Handler(Opt_Handler, ABC):
         for i in range(1, iterations+1):
 
             s = -1*np.matmul(H, g)
-            
-            #a, b = self.exact_LS_GS(f, x, s, 0.8, 1.2, 100)  
+
+            #a, b = self.exact_LS_GS(f, x, s, 0.8, 1.2, 100)
             #alpha = (a+b)/2
-            alpha, _ = self.inexact_LS(f, x, s, 0.1, 'G')
+            alpha, _ = self.inexact_LS(f, x, s, 0.1, 'WP')
             x = x + alpha * s
 
             #Update variables
@@ -32,7 +32,7 @@ class Quasi_Newton_Handler(Opt_Handler, ABC):
             #print("g, norm(g):", g, '\n', np.linalg.norm(g))
             if np.linalg.norm(g) < tol:
                 break
-            
+
             if np.isnan(H).any() or np.isinf(H).any():
                 print('WARNING! H is NaN or Inf')
                 break
@@ -45,58 +45,65 @@ class Quasi_Newton_Handler(Opt_Handler, ABC):
 
 class BFGS(Quasi_Newton_Handler):
     def update(self, f, x, x_new, H):
-        delta = (x_new - x).reshape(-1, 1)
-        gamma = (self.grad(f, x_new)-self.grad(f, x)).reshape(-1, 1)
 
-        return H + (1 + np.matmul(gamma.T, np.matmul(H, gamma))/np.matmul(delta.T, gamma))*np.matmul(delta, delta.T)/np.matmul(delta.T, gamma) - (np.matmul(delta, np.matmul(gamma.T, H)) + np.matmul(H, np.matmul(gamma, delta.T)))/np.matmul(delta.T, gamma)
+        delta = (x_new - x)
+        gamma = (self.grad(f, x_new)-self.grad(f, x))
+        dTg = delta@gamma
+
+        return H + (1 + gamma@H@gamma/dTg)*(np.outer(delta,delta)/dTg) - (np.outer(delta,gamma)@H + H@np.outer(gamma,delta))/dTg
 
 class DFP(Quasi_Newton_Handler):
     def update(self, f, x, x_new, H):
-        delta = (x_new - x).reshape(-1, 1)
-        gamma = (self.grad(f, x_new)-self.grad(f, x)).reshape(-1, 1)
+        delta = (x_new - x)#.reshape(-1, 1)
+        gamma = (self.grad(f, x_new)-self.grad(f, x))#.reshape(-1, 1)
 
-        return H + np.matmul(delta, delta.T)/np.matmul(delta.T, gamma) - np.matmul(np.matmul(H, gamma), np.matmul(gamma.T,H))/np.matmul(gamma.T, np.matmul(H,gamma))
+        return H + (np.outer(delta,delta)/(delta@gamma)) - (H@np.outer(gamma,gamma)@H)/(gamma@H@gamma)        
 
 class Good_Broyden(Quasi_Newton_Handler):
     def update(self, f, x, x_new, H):
-        delta = (x_new - x).reshape(-1, 1)
-        gamma = (self.grad(f, x_new) - self.grad(f, x)).reshape(-1, 1)
-        u = delta - np.matmul(H, gamma)
-        a = 1/np.matmul(u.T, gamma)
 
-        return H + a[0][0] * np.matmul(u, u.T)
+        delta = (x_new - x)
+        gamma = (self.grad(f, x_new) - self.grad(f, x))
+
+        u = delta - (H@gamma)
+        a = 1/(np.dot(u,gamma))
+        return H + (a*np.outer(u,u))
 
 class Bad_Broyden(Quasi_Newton_Handler):
     def update(self, f, x, x_new, H):
-        delta = (x_new - x).reshape(-1, 1)
-        gamma = (self.grad(f, x_new) - self.grad(f, x)).reshape(-1, 1)
+        delta = (x_new - x)
+        gamma = (self.grad(f, x_new) - self.grad(f, x))
 
-        c, lower = spl.cho_factor(H, lower=True)
-        B = spl.cho_solve((c,lower), np.eye(len(H)))
+        try:
+            c, lower = spl.cho_factor(H, lower=True)
+            B = spl.cho_solve((c,lower), np.eye(len(H)))
 
-        u = gamma - np.matmul(B, delta)
-        a = 1/np.matmul(u.T, delta)
+            u = gamma - B@delta
+            a = 1/(u.T@delta)
 
-        B = B + a[0][0] * np.matmul(u, u.T)
-        
-        c, lower = spl.cho_factor(B, lower=True)
-        H = spl.cho_solve((c, lower), np.eye(len(H)))
+            B = B + a * (u@u.T)
 
-        return H 
+            c, lower = spl.cho_factor(B, lower=True)
+            H = spl.cho_solve((c, lower), np.eye(len(H)))
+
+        except:
+            raise Exception('Warning! Positive definite matrix')
+
+        return H
 
 
 
 if __name__ == '__main__':
 
-    #f = lambda x: x[0] ** 3 + x[1] ** 2 + 1
-    f = lambda x: 100 * (x[0] - x[1] ** 2) ** 2 + (1 - x[0]) ** 2
+    f = lambda x: x[0] ** 2 + x[1] ** 2 + 1
+    #f = lambda x: 100 * (x[1] - x[0] ** 2) ** 2 + (1 - x[0]) ** 2
 
     bfgs = BFGS()
     dfp = DFP()
     bb = Bad_Broyden()
     gb = Good_Broyden()
 
-    x0 = np.array([2,2])
+    x0 = np.array([2, 2])
 
     print("BFGS:")
     print("\tAnswer:", bfgs.optimize(f, x0, 100))
