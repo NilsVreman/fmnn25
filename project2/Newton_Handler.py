@@ -5,7 +5,7 @@ import scipy.linalg as spl
 
 class Newton_Handler(Opt_Handler, ABC):
     def optimize(self, f, x0, iterations, grad=None, tol=1.e-6):
-        if not(grad is None):
+        if grad is not None:
             self.grad = grad
 
         x = x0.astype(float)
