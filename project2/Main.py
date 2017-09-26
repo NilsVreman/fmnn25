@@ -25,14 +25,9 @@ if __name__ == '__main__':
     print("\tAnswer:", inexact_newton_wp.optimize(f, x0, 100))
 
     x = np.linspace(0,1,4)
-
-    classic_newton = Classic_Newton(gradchebyquad)
-    exact_newton = Exact_Newton(gradchebyquad)
-    inexact_newton_g = Inexact_Newton_G(gradchebyquad)
-    inexact_newton_wp = Inexact_Newton_WP(gradchebyquad)
     print("\nNewton CHEBY:")
-    print("\tAnswer:", classic_newton.optimize(chebyquad, x, 100))
-    # print("\tAnswer:", exact_newton.optimize(chebyquad, x, 100))
-    # print("\tAnswer:", inexact_newton_g.optimize(chebyquad, x, 100))
-    # print("\tAnswer:", inexact_newton_wp.optimize(chebyquad, x, 100))
+    print("\tAnswer:", classic_newton.optimize(chebyquad, x, 100, grad=gradchebyquad))
+    # print("\tAnswer:", exact_newton.optimize(chebyquad, x, 100, grad=gradchebyquad))
+    # print("\tAnswer:", inexact_newton_g.optimize(chebyquad, x, 100, grad=gradchebyquad))
+    # print("\tAnswer:", inexact_newton_wp.optimize(chebyquad, x, 100, grad=gradchebyquad))
     # xmin= so.fmin_bfgs(chebyquad,x,gradchebyquad)

@@ -4,7 +4,10 @@ import numpy as np
 import scipy.linalg as spl
 
 class Newton_Handler(Opt_Handler, ABC):
-    def optimize(self, f, x0, iterations, tol=1.e-6):
+    def optimize(self, f, x0, iterations, grad=None, tol=1.e-6):
+        if not(grad is None):
+            self.grad = grad
+
         x = x0.astype(float)
 
         g = self.grad(f, x)
