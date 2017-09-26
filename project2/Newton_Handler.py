@@ -16,7 +16,7 @@ class Newton_Handler(Opt_Handler, ABC):
             x = x + self.alpha(f, x, s) * s
             g = self.grad(f, x)
             G = self.hessian(f, x)
-            print("\tg, norm(g):", g, np.linalg.norm(g))
+            # print("\tg, norm(g):", g, np.linalg.norm(g))
             if np.linalg.norm(g) < tol:
                 break
 

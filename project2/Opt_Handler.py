@@ -9,7 +9,13 @@ class Opt_Handler(ABC):
     def optimize(self):
         pass
 
-    def grad(self, f, x):
+    def __init__(self, grad=None):
+        if grad is None:
+            self.grad= self.__grad
+        else:
+            self.grad = grad
+
+    def __grad(self, f, x):
         eps = 1.e-8
 
         if not hasattr(x, '__len__'): x = [x]
