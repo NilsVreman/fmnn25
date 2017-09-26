@@ -47,30 +47,32 @@ class TestOpt(unittest.TestCase):
 
         f = lambda x: 100 * (x[1] - x[0] ** 2) ** 2 + (1 - x[0]) ** 2
         x0 = np.array([2,2])
-        assert_allclose(self.bfgs.optimize(f, x0, 300), np.array([1,1]))
-        assert_allclose(self.dfp.optimize(f, x0, 300), np.array([1,1]))
-        assert_allclose(self.gb.optimize(f, x0, 300), np.array([1,1]))
+        assert_allclose(self.bfgs.optimize(f, x0, 100), np.array([1,1]))
+        assert_allclose(self.dfp.optimize(f, x0, 100), np.array([1,1]))
+        assert_allclose(self.gb.optimize(f, x0, 100), np.array([1,1]))
         # BB DOES NOT WORK FOR SOME REASON
         # assert_allclose(self.bb.optimize(f, x0, 100), np.array([1,1]),rtol=1e-07)
 
 
     def test_chebyquad4(self):
         '''
-        Tests the chebyguad with n=11, needs absolute tolerance of 0.05
+        Tests the chebyquad with n=11, needs absolute tolerance of 0.05
         '''
         x0 = np.linspace(0,1,4)
+        xmin = so.fmin_bfgs(chebyquad, x0, gradchebyquad)
+        assert_allclose(self.classic_newton.optimize(chebyquad, x0, 100), xmin, atol=0.05)
         self.cheby_cases(x0, 0.05)
 
     def test_chebyquad8(self):
         '''
-        Tests the chebyguad with n=11, needs absolute tolerance of 0.1
+        Tests the chebyquad with n=11, needs absolute tolerance of 0.1
         '''
         x0 = np.linspace(0,1,8)
         self.cheby_cases(x0, 0.1)
 
     def test_chebyquad11(self):
         '''
-        Tests the chebyguad with n=11, needs absolute tolerance of 0.6
+        Tests the chebyquad with n=11, needs absolute tolerance of 0.6
         '''
         x0 = np.linspace(0,1,11)
         self.cheby_cases(x0, 0.6)
