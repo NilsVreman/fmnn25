@@ -44,9 +44,9 @@ class TestOpt(unittest.TestCase):
 
         f = lambda x: 100 * (x[1] - x[0] ** 2) ** 2 + (1 - x[0]) ** 2
         x0 = np.array([2,2])
-        assert_allclose(self.bfgs.optimize(f, x0, 300), np.array([1,1]),rtol=1e-07)
-        assert_allclose(self.dfp.optimize(f, x0, 300), np.array([1,1]),rtol=1e-07)
-        assert_allclose(self.gb.optimize(f, x0, 300), np.array([1,1]),rtol=1e-07)
+        assert_allclose(self.bfgs.optimize(f, x0, 300), np.array([1,1]))
+        assert_allclose(self.dfp.optimize(f, x0, 300), np.array([1,1]))
+        assert_allclose(self.gb.optimize(f, x0, 300), np.array([1,1]))
         # BB DOES NOT WORK FOR SOME REASON
         # assert_allclose(self.bb.optimize(f, x0, 100), np.array([1,1]),rtol=1e-07)
 
