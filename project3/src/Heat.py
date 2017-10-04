@@ -80,19 +80,45 @@ class Heat():
         u = spl.solve(A, b)
         return u
 
+    
+    
+    
+
 
 if __name__ == '__main__':
     # input
     length_x = 1
-    length_y = 1
-    dx = 1 / 4
+    length_y = 2
+    dx = 1 / 3
+    w = 0.75
 
     nbr_sq_x = int(length_x / dx)
     nbr_sq_y = int(length_y / dx)
-    v1 = 10 * np.ones(nbr_sq_y+1)
-    v2 = 15 * np.ones(nbr_sq_x+1)
-    v3 = 20 * np.ones(nbr_sq_y+1)
-    v4 = 25 * np.ones(nbr_sq_x+1)
 
     h = Heat()
-    h.calculate_heat(length_x, length_y, v1, v2, v3, v4, dx)
+    v1 = 15 * np.ones(nbr_sq_y+1) #left
+    v2 = 40 * np.ones(nbr_sq_x+1) #top
+    v3 = 15 * np.ones(nbr_sq_y+1) #right
+    v4 = 5  * np.ones(nbr_sq_x+1) #bottom
+
+    t2 = 15 * np.ones(nbr_sq_x+1) #top
+    t3 = 40 * np.ones(nbr_sq_x+1) #right
+    t4 = 15 * np.ones(nbr_sq_x+1) #bottom 
+
+    u_old_big = h.calculate_heat(length_x, length_y, v1, v2, v3, v4, dx)
+
+    for i in range(0, 10):
+
+        u = h.calculate_heat(length_x, length_y, v1, v2, v3, v4, dx)
+        u = w*u + (1-w)*u_old_big
+        u_old_big = u
+        print(u, '\n--------------------------')
+        
+        neumann = -1*(v3[1:int(1/dx)]-[u[i] for i in np.arange(1, 4, 2)])
+        neumann = np.append(np.append([0], neumann / dx), [0])
+
+        t1 = neumann
+        u = h.calculate_heat(1, 1, t1, t2, t3, t4, dx)
+        print(u, '\n--------------------------')
+
+        v3[1:3] = np.array([u[1], u[3]]) 
