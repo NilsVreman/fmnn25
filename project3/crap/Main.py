@@ -1,12 +1,13 @@
 from Room_temp import Room_temp
 import numpy as np
+import matplotlib.pyplot as plt
 
 if __name__ == '__main__':
     length_B_x = 1
     length_B_y = 2
     length_S_x = 1
     length_S_y = 1
-    dx = 1/3
+    dx = 1/20
     nbr_iter = 10
     w = 0.75
  
@@ -93,7 +94,17 @@ if __name__ == '__main__':
         B_rt.add_dirichlet_cond(B_wallL[int(len(B_wallL) / 2):, :], SL_rt_mat[:,-1])
         B_rt.add_dirichlet_cond(B_wallR[:int(len(B_wallR) / 2 + 1), :], SR_rt_mat[:, 0])
 
-
+    B_rt_mat = B_rt.find_temp_matrix(B_rt())
     print('Temperature in room 1 is now: \n', SL_rt_mat)
-    print('Temperature in room 2 is now: \n', B_rt.find_temp_matrix(B_rt()))
+    print('Temperature in room 2 is now: \n', B_rt_mat)
     print('Temperature in room 1 is now: \n', SR_rt_mat)
+
+    #Assemble final apartment matrix
+    M = np.zeros((len(B_rt_mat), len(SL_rt_mat[0]) + len(B_rt_mat[0]) + len(SR_rt_mat[0]) -2))
+    M[len(SL_rt_mat)-1:, :len(SL_rt_mat[0])] = SL_rt_mat[:,:]
+    M[:, len(SL_rt_mat[0])-1:len(SL_rt_mat[0])-1+len(B_rt_mat[0])] = B_rt_mat[:,:]
+    M[:len(SR_rt_mat), len(SL_rt_mat[0]) + len(B_rt_mat[0]) -2:] = SR_rt_mat[:,:]
+
+    plt.imshow(M, cmap='plasma')
+    plt.colorbar(orientation='vertical')
+    plt.show()
