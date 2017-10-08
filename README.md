@@ -4,7 +4,7 @@
 
 * To be able to run Main2Cores and Main3Cores install mpi4py
 
-* If you have anaconda you can run the following in the terminal(Doesn't work on Windows):
+* If you have anaconda you can run the following in the terminal (Doesn't work on Windows):
 
 ```
  conda install --channel mpi4py mpich mpi4py
